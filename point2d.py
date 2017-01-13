@@ -24,6 +24,7 @@ class point2d(object):
         self._x = np.float32( x )
         self._y = np.float32( y )
 
+    @property
     def x(self):
         """
         returns: float
@@ -31,6 +32,7 @@ class point2d(object):
         """
         return self._x
 
+    @property
     def y(self):
         """
         returns: float
@@ -52,6 +54,14 @@ class point2d(object):
         """
         return "{0} {1}".format(self._x, self._y)
 
+    def __setitem__(self, i):
+        """
+        """
+
+    def __getitem__(self, i):
+        """
+        """
+
     @staticmethod
     def remove_dupes(pts, tol):
         """
@@ -70,3 +80,4 @@ class point2d(object):
             pt_prev = pt
 
         return rc
+

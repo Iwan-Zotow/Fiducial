@@ -3,12 +3,12 @@
 import math
 import numpy as np
 
-class point2d(object):
+class point3d(object):
     """
-    2D point of two floats
+    3D point of two floats
     """
 
-    def __init__(self, x = np.float32(0.0), y = np.float32(0.0)):
+    def __init__(self, x = np.float32(0.0), y = np.float32(0.0), z = np.float32(0.0)):
         """
         Constructor. Build point from x and y
 
