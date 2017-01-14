@@ -3,6 +3,8 @@
 import math
 import numpy as np
 
+from Idx import
+
 class point2d(object):
     """
     2D point of two floats
@@ -54,13 +56,33 @@ class point2d(object):
         """
         return "{0} {1}".format(self._x, self._y)
 
-    def __setitem__(self, i):
+    def __setitem__(self, i, value):
         """
+        Given the index i, set proper item to value
         """
+        if i < 0:
+            raise IndexError("point2d::__setitem__: negative index {0}".format(i))
+        if i == 0:
+            self._x = value
+            return
+        if i == 1:
+            self._y = value
+            return
+
+        raise IndexError("point2d::__setitem__: too large index {0}".format(i))
 
     def __getitem__(self, i):
         """
+        Given the index i, returns the proper item
         """
+        if i < 0:
+            raise IndexError("point2d::__getitem__: negative index {0}".format(i))
+        if i == 0:
+            return self._x
+        if i == 1:
+            return self._y
+
+        raise IndexError("point2d::__getitem__: too large index {0}".format(i))
 
     @staticmethod
     def remove_dupes(pts, tol):
