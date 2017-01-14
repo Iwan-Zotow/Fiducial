@@ -3,11 +3,13 @@
 import math
 import numpy as np
 
-from Idx import
+from Idx import X, Y
+
+r"""This module implements 2D FP point"""
 
 class point2d(object):
     """
-    2D point of two floats
+    2D point made from two floats
     """
 
     def __init__(self, x = np.float32(0.0), y = np.float32(0.0)):
@@ -56,33 +58,33 @@ class point2d(object):
         """
         return "{0} {1}".format(self._x, self._y)
 
-    def __setitem__(self, i, value):
-        """
-        Given the index i, set proper item to value
-        """
-        if i < 0:
-            raise IndexError("point2d::__setitem__: negative index {0}".format(i))
-        if i == 0:
-            self._x = value
-            return
-        if i == 1:
-            self._y = value
-            return
-
-        raise IndexError("point2d::__setitem__: too large index {0}".format(i))
-
     def __getitem__(self, i):
         """
         Given the index i, returns the proper item
         """
-        if i < 0:
+        if i < X:
             raise IndexError("point2d::__getitem__: negative index {0}".format(i))
-        if i == 0:
+        if i == X:
             return self._x
-        if i == 1:
+        if i == Y:
             return self._y
 
         raise IndexError("point2d::__getitem__: too large index {0}".format(i))
+
+    def __setitem__(self, i, value):
+        """
+        Given the index i, set proper item to value
+        """
+        if i < X:
+            raise IndexError("point2d::__setitem__: negative index {0}".format(i))
+        if i == X:
+            self._x = value
+            return
+        if i == Y:
+            self._y = value
+            return
+
+        raise IndexError("point2d::__setitem__: too large index {0}".format(i))
 
     @staticmethod
     def remove_dupes(pts, tol):
@@ -103,3 +105,11 @@ class point2d(object):
 
         return rc
 
+if __name__ == "__main__":
+
+    p = point2d(12.0, 11.0)
+
+    print("X = {0}".format(p.x))
+    print("Y = {0}".format(p.y))
+    print(str(p))
+    print(repr(p))
