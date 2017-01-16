@@ -68,8 +68,8 @@ class point2d(object):
             return self._x
         if i == Y:
             return self._y
-
-        raise IndexError("point2d::__getitem__: too large index {0}".format(i))
+        # beyond Y
+        raise IndexError("point2d::__getitem__: index too large {0}".format(i))
 
     def __setitem__(self, i, value):
         """
@@ -83,8 +83,8 @@ class point2d(object):
         if i == Y:
             self._y = value
             return
-
-        raise IndexError("point2d::__setitem__: too large index {0}".format(i))
+        # beyond Y
+        raise IndexError("point2d::__setitem__: index too large {0}".format(i))
 
     @staticmethod
     def remove_dupes(pts, tol):

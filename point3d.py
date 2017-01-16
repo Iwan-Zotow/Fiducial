@@ -81,15 +81,15 @@ class point3d(object):
             return self._y
         if i == Z:
             return self._z
-
-        raise IndexError("point3d::__getitem__: too large index {0}".format(i))
+        # beyond Z
+        raise IndexError("point3d::__getitem__: index too large {0}".format(i))
 
     def __setitem__(self, i, value):
         """
         Given the index i, set proper item to value
         """
         if i < X:
-            raise IndexError("point2d::__setitem__: negative index {0}".format(i))
+            raise IndexError("point3d::__setitem__: negative index {0}".format(i))
         if i == X:
             self._x = value
             return
@@ -99,8 +99,8 @@ class point3d(object):
         if i == Z:
             self._z = value
             return
-
-        raise IndexError("point2d::__setitem__: too large index {0}".format(i))
+        # beyond Z
+        raise IndexError("point3d::__setitem__: index too large {0}".format(i))
 
 if __name__ == "__main__":
 
