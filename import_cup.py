@@ -84,6 +84,6 @@ if __name__ == "__main__":
 
     shapes = main("cups/XMSGP030A10.01-003 breast_cup_outer_S fiducial wire.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
 
-    # display_shapes(shapes)
+    display_shapes(shapes)
 
     sys.exit(0)
