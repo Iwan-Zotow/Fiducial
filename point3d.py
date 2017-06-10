@@ -111,3 +111,7 @@ if __name__ == "__main__":
     print("Z = {0}".format(p.z))
     print(str(p))
     print(repr(p))
+
+    print(p[0])
+    print(p[1])
+    print(p[2])
