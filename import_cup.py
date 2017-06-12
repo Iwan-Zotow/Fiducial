@@ -14,30 +14,140 @@ import aocutils.display.backends
 import aocxchange.step
 import aocxchange.utils
 
-def display_shapes(shape):
+from functools import partial
+
+def display_solids(display, shape, event = None):
     """
-    for list of shapes, display first one
+    Display shape solids given the display
     """
-
-    backend = aocutils.display.defaults.backend
-    display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
-
-    # aocutils.display.topology.solids(display, shape, transparency=0.8)
-    # aocutils.display.topology.shells(display, shape, transparency=0.8)
-    # aocutils.display.topology.faces(display, shape, transparency=0.8)
-    # aocutils.display.topology.edges(display, shape, transparency=0.8)
-    aocutils.display.topology.wires(display, shape)
-
-
+    display.EraseAll()
+    aocutils.display.topology.solids(display, shape, transparency=0.8)
     display.FitAll()
     display.View_Iso()
-    start_display()
+
+def display_faces(display, shape, event = None):
+    """
+    Display shape faces given the display
+    """
+    display.EraseAll()
+    aocutils.display.topology.faces(display, shape, transparency=0.8)
+    display.FitAll()
+    display.View_Iso()
+
+def display_shells(display, shape, event = None):
+    """
+    Display shape shells given the display
+    """
+    display.EraseAll()
+    aocutils.display.topology.shells(display, shape, transparency=0.8)
+    display.FitAll()
+    display.View_Iso()
+
+def display_edges(display, shape, event = None):
+    """
+    Display shape edges given the display
+    """
+    display.EraseAll()
+    aocutils.display.topology.edges(display, shape, transparency=0.8)
+    display.FitAll()
+    display.View_Iso()
+
+def display_wires(display, shape, event = None):
+    """
+    Display shape wires given the display
+    """
+    display.EraseAll()
+    aocutils.display.topology.wires(display, shape)
+    display.FitAll()
+    display.View_Iso()
+
+def display_all(display, shape):
+    """
+    display every part of the shape
+    """
+    add_menu('solids')
+    dsolids = partial(display_solids, display, shape)
+    dsolids.__name__ = "dsolids"
+    add_function_to_menu('solids', dsolids)
+    add_menu('edges')
+    dedges = partial(display_edges, display, shape)
+    dedges.__name__ = "dedges"
+    add_function_to_menu('edges', dedges)
+    add_menu('faces')
+    dfaces = partial(display_faces, display, shape)
+    dfaces.__name__ = "dfaces"
+    add_function_to_menu('faces', dfaces)
+    add_menu('shells')
+    dshells = partial(display_shells, display, shape)
+    dshells.__name__ = "dshells"
+    add_function_to_menu('shells', dshells)
+    add_menu('wires')
+    dwires = partial(display_wires, display, shape)
+    dwires.__name__ = "dwires"
+    add_function_to_menu('wires', dwires)
+
+def print_solids(shape):
+    """
+    print solids of the shape
+    """
+    the_solids = aocutils.topology.Topo(shape, return_iter=False).solids
+    for i, solid in enumerate(the_solids):
+        print("{0} {1}".format(i, type(solid)))
+
+def print_shells(shape):
+    """
+    print shells of the shape
+    """
+    the_shells = aocutils.topology.Topo(shape, return_iter=False).shells
+    for i, shell in enumerate(the_shells):
+        print("{0} {1}".format(i, type(shell)))
+
+def print_faces(shape):
+    """
+    print faces of the shape
+    """
+    the_faces = aocutils.topology.Topo(shape, return_iter=False).faces
+    for i, face in enumerate(the_faces):
+        print("{0} {1}".format(i, type(face)))
+
+def print_edges(shape):
+    """
+    print edges of the shape
+    """
+    the_edges = aocutils.topology.Topo(sol, return_iter=False).edges
+    for i, edge in enumerate(the_edges):
+        print("{0} {1}".format(i, type(edge)))
+
+def print_wires(shape):
+    """
+    print wires of the shape
+    """
+    the_wires = aocutils.topology.Topo(shape, return_iter=False).wires
+    for i, wire in enumerate(the_wires):
+        print("{0} {1}".format(i, type(wire)))
+
+def print_all(shape, separator = None):
+    """
+    Print all pieces of the shape, with optional separator in between
+    """
+    print_solids(shape)
+    if separator != None:
+        print(separator)
+    print_shells(shape)
+    if separator != None:
+        print(separator)
+    print_faces(shape)
+    if separator != None:
+        print(separator)
+    print_edges(shape)
+    if separator != None:
+        print(separator)
+    print_wires(shape)
 
 def readSTEP(filename):
     """
     Given the STEP filename, read shapes from it
     """
-
     fname = aocxchange.utils.path_from_file(__file__, filename)
     importer = aocxchange.step.StepImporter(fname)
 
@@ -70,7 +180,6 @@ def factory_shapes(shape):
     """
     upgrade shape based on type
     """
-
     t = shape.ShapeType()
 
     if (t == OCC.TopAbs.TopAbs_COMPOUND):
@@ -103,7 +212,6 @@ def main(filename):
     """
     process single cup from filename
     """
-
     shapes = readSTEP(filename)
 
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
@@ -115,11 +223,9 @@ def main(filename):
     print(type(shape))
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
-    # sol = factory_shapes(shape)
-    sol = aocutils.topology.shape_to_topology(shape)
+    sol = aocutils.topology.shape_to_topology(shape) # sol = factory_shapes(shape)
 
     print(type(sol))
-    print(dir(sol))
 
     return sol
 
@@ -141,31 +247,26 @@ if __name__ == "__main__":
 
     sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S fiducial wire.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
 
-    # display_shapes(sol)
-    # print_flags(sol)
+    #backend = aocutils.display.defaults.backend
+    #display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
+    #display_all(display, sol)
+    #start_display()
 
-    #the_solids = aocutils.topology.Topo(sol, return_iter=False).solids
-    #for i, solid in enumerate(the_solids):
-    #    print("{0} {1}".format(i, type(solid)))
+    #print_flags(sol)
 
-    #the_shells = aocutils.topology.Topo(sol, return_iter=False).shells
-    #for i, shell in enumerate(the_shells):
-    #    print("{0} {1}".format(i, type(shell)))
+    sep = "          -------------               "
+    print(sep)
+    print_all(sol, sep)
+    print(sep)
 
-    print("          -------------               ")
     the_faces = aocutils.topology.Topo(sol, return_iter=False).faces
     for i, face in enumerate(the_faces):
-        print("{0} {1}".format(i, type(face)))
-    print("          -------------               ")
+        s = OCC.BRep.BRep_Tool.Surface(face)
+        q = s.GetObject()
+        # print("{0} {1} {2} {3} {4} {5}".format(i, type(face), type(s), type(q), issubclass(OCC.Geom.Geom_Plane, OCC.Geom.Geom_Surface), isinstance(q, OCC.Geom.Geom_Surface) ))
 
-    the_edges = aocutils.topology.Topo(sol, return_iter=False).edges
-    for i, edge in enumerate(the_edges):
-        print("{0} {1}".format(i, type(edge)))
-    print("          -------------               ")
+        t =
 
-    the_wires = aocutils.topology.Topo(sol, return_iter=False).wires
-    for i, wire in enumerate(the_wires):
-        print("{0} {1}".format(i, type(wire)))
-    print("          -------------               ")
+
 
     sys.exit(0)
