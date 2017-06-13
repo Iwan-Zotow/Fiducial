@@ -286,25 +286,39 @@ if __name__ == "__main__":
 
     the_faces = aocutils.topology.Topo(sol, return_iter=False).faces
     for i, face in enumerate(the_faces):
-        s = OCC.BRep.BRep_Tool.Surface(face)
-        s = s.GetObject()
+        s = OCC.BRep.BRep_Tool.Surface(face) # make surface from face, get back handle
+        s = s.GetObject()                    # actual object
         t = get_surface(s)
-        print("{0} {1} {2} {3} {4}".format(i, type(face), type(s), isinstance(s, OCC.Geom.Geom_Surface), t ))
+        print("{0} {1} {2} {3}".format(i, type(face), type(s), t ))
         if t == "Geom_Plane":
             the_wires = aocutils.topology.Topo(face, return_iter=False).wires
-            for j, wire in enumerate(the_wires):
-                print("  {0} {1}".format(j, type(wire)))
-                the_edges = aocutils.topology.Topo(wire, return_iter=False).edges
-                for k, edge in enumerate(the_edges):
-                    print("    {0} {1}".format(k, type(edge)))
+            if len(the_wires) == 2:
+                wire0 = the_wires[0]
+                wire1 = the_wires[1]
 
+                edges0 = aocutils.topology.Topo(wire0, return_iter=False).edges
+                edges1 = aocutils.topology.Topo(wire0, return_iter=False).edges
+
+                e0 = edges0[0]
+                e1 = edges1[0]
+
+                c0, f0, l0 = OCC.BRep.BRep_Tool.Curve(e0) # curve and first/last
+                c0 = c0.GetObject() # Get handle of the Geom Curve
+                k0 = get_curve(c0)  # Get actual Geom Curve
+
+                c1, f1, l1 = OCC.BRep.BRep_Tool.Curve(e0) # curve and first/last
+                c1 = c1.GetObject() # Get handle of the Geom Curve
+                k1 = get_curve(c1)  # Get actual Geom Curve
+
+                print("  {0} {1} {2} {3}".format(type(c0), k0, l0, f0))
+                print("  {0} {1} {2} {3}".format(type(c1), k1, l1, f1))
 
 
 
 #    print(sep)
 #    the_edges = aocutils.topology.Topo(sol, return_iter=False).edges
 #    for i, edge in enumerate(the_edges):
-#        c, f, l = OCC.BRep.BRep_Tool.Curve(edge)
+#        c, f, l = OCC.BRep.BRep_Tool.Curve(edge) # curve and
 #        c = c.GetObject()
 #        k = get_curve(c)
 #        print("{0} {1} {2} {3}".format( f, l, type(c), k ))

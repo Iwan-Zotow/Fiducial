@@ -43,7 +43,6 @@
 
                             Context.AddShape(face, Color.Red);
 
-
                             OCGeom_Circle cir1 = c1 as OCGeom_Circle;
                             OCGeom_Circle cir2 = c2 as OCGeom_Circle;
                             Context.AddAxis(cir1.Axis(), 25, Color.Green);
