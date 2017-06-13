@@ -241,6 +241,31 @@ def print_flags(shape):
     print(shape.Free())
     print(shape.Infinite())
 
+def get_surface(surface):
+    """
+    Given surface, return what kind it is
+    """
+    surfaces = ["Geom_BezierSurface", "Geom_BSplineSurface", "Geom_RectangularTrimmedSurface",
+                "Geom_ConicalSurface", "Geom_CylindricalSurface", "Geom_Plane", "Geom_SphericalSurface",
+                "Geom_ToroidalSurface", "Geom_SurfaceOfLinearExtrusion", "Geom_SurfaceOfRevolution"]
+
+    for s in surfaces:
+        if surface.IsKind(s):
+            return s
+
+    return None
+
+def get_curve(curve):
+    """
+    Given curve, return integer kind
+    """
+    curves = ["Geom_BezierCurve", "Geom_BSplineCurve", "Geom_TrimmedCurve", "Geom_Circle", "Geom_Ellipse", "Geom_Hyperbola", "Geom_Parabola"]
+    for c in curves:
+        if curve.IsKind(c):
+            return c
+
+    return None
+
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s :: %(levelname)6s :: %(module)20s :: %(lineno)3d :: %(message)s')
@@ -262,11 +287,26 @@ if __name__ == "__main__":
     the_faces = aocutils.topology.Topo(sol, return_iter=False).faces
     for i, face in enumerate(the_faces):
         s = OCC.BRep.BRep_Tool.Surface(face)
-        q = s.GetObject()
-        # print("{0} {1} {2} {3} {4} {5}".format(i, type(face), type(s), type(q), issubclass(OCC.Geom.Geom_Plane, OCC.Geom.Geom_Surface), isinstance(q, OCC.Geom.Geom_Surface) ))
+        s = s.GetObject()
+        t = get_surface(s)
+        print("{0} {1} {2} {3} {4}".format(i, type(face), type(s), isinstance(s, OCC.Geom.Geom_Surface), t ))
+        if t == "Geom_Plane":
+            the_wires = aocutils.topology.Topo(face, return_iter=False).wires
+            for j, wire in enumerate(the_wires):
+                print("  {0} {1}".format(j, type(wire)))
+                the_edges = aocutils.topology.Topo(wire, return_iter=False).edges
+                for k, edge in enumerate(the_edges):
+                    print("    {0} {1}".format(k, type(edge)))
 
-        t =
 
 
+
+#    print(sep)
+#    the_edges = aocutils.topology.Topo(sol, return_iter=False).edges
+#    for i, edge in enumerate(the_edges):
+#        c, f, l = OCC.BRep.BRep_Tool.Curve(edge)
+#        c = c.GetObject()
+#        k = get_curve(c)
+#        print("{0} {1} {2} {3}".format( f, l, type(c), k ))
 
     sys.exit(0)

@@ -3,11 +3,10 @@
             public OCGeom_Circle cir1 = null;
             public OCGeom_Circle cir2 = null;
             public OCTopoDS_Face faceToFind = null;
-        };
+        }
 
         //Example to detect planer start and end face of tube
         // See: https://www.opencascade.com/comment/19852#comment-19852
-
         {
             List<OCTopoDS_Shape> shapes = OCSerialize.FromStepData(data); //see stepdata below
             Context.Log("shapes.Count: " + shapes.Count);
@@ -18,17 +17,16 @@
             int found=0;
             foreach (OCTopoDS_Face face in shape.Faces())
             {
-
-                //this is an extension method for: OCGeom_Surface s =OCBRep_Tool.Surface(face)
+                // this is an extension method for: OCGeom_Surface s =OCBRep_Tool.Surface(face)
                 OCGeom_Surface s = face.Surface();
 
-                //check if face is a plane
+                // check if face is a plane
                 if (s is OCGeom_Plane)
                 {
                     OCGeom_Plane plane = s as OCGeom_Plane;
                     List<OCTopoDS_Wire> wires = new List<OCTopoDS_Wire>(face.Wires());
 
-                    //See if the face has 2 wires (outer and inner)
+                    // See if the face has 2 wires (outer and inner)
                     if (wires.Count == 2)
                     {
                         OCTopoDS_Edge e1 = wires[0].Edges().First();
@@ -37,7 +35,7 @@
                         OCGeom_Curve c1 = e1.Curve();
                         OCGeom_Curve c2 = e2.Curve();
 
-                        //see if both wires are Circle's
+                        // see if both wires are Circle's
                         if (c1 is OCGeom_Circle && c2 is OCGeom_Circle)
                         {
                             Context.AddShape(e1, Color.Blue);
@@ -67,13 +65,12 @@
                 }
             }
 
+            if (startEndFace[0] != null && startEndFace[1] != null)
+            {
+                Context.AddLogLine("start and end are found");
+                //TODO make algorithm to find the "extrusion path"
+            }
 
-              if (startEndFace[0] != null && startEndFace[1] != null)
-              {
-                    Context.AddLogLine("start and end are found");
-                    //TODO make algorithm to find the "extrusion path"
-              }
-
-              Context.AddShape(shape, Color.Gray, 0.2);
-              //Context.AddLogLine(shape.Dump());
+            Context.AddShape(shape, Color.Gray, 0.2);
+            // Context.AddLogLine(shape.Dump());
         }
