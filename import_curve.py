@@ -165,31 +165,6 @@ def print_flags(shape):
     print(shape.Free())
     print(shape.Infinite())
 
-def get_surface(surface):
-    """
-    Given surface, return what kind it is
-    """
-    surfaces = ["Geom_BezierSurface", "Geom_BSplineSurface", "Geom_RectangularTrimmedSurface",
-                "Geom_ConicalSurface", "Geom_CylindricalSurface", "Geom_Plane", "Geom_SphericalSurface",
-                "Geom_ToroidalSurface", "Geom_SurfaceOfLinearExtrusion", "Geom_SurfaceOfRevolution"]
-
-    for s in surfaces:
-        if surface.IsKind(s):
-            return s
-
-    return None
-
-def get_curve(curve):
-    """
-    Given curve, return integer kind
-    """
-    curves = ["Geom_BezierCurve", "Geom_BSplineCurve", "Geom_TrimmedCurve", "Geom_Circle", "Geom_Ellipse", "Geom_Hyperbola", "Geom_Parabola"]
-    for c in curves:
-        if curve.IsKind(c):
-            return c
-
-    return None
-
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s :: %(levelname)6s :: %(module)20s :: %(lineno)3d :: %(message)s')
@@ -212,7 +187,7 @@ if __name__ == "__main__":
     for i, face in enumerate(the_faces):
         s = OCC.BRep.BRep_Tool.Surface(face) # make surface from face, get back handle
         s = s.GetObject()                    # actual object
-        t = get_surface(s)
+        t = CADhelpers.get_surface(s)
         print("{0} {1} {2} {3}".format(i, type(face), type(s), t))
         if t == "Geom_Plane":
             the_wires = aocutils.topology.Topo(face, return_iter=False).wires
@@ -228,7 +203,7 @@ if __name__ == "__main__":
 
                 c0, f0, l0 = OCC.BRep.BRep_Tool.Curve(e0) # curve and first/last
                 c0 = c0.GetObject() # Get handle of the Geom Curve
-                k0 = get_curve(c0)  # Get actual Geom Curve
+                k0 = CADhelpers.get_curve(c0)  # Get actual Geom Curve
                 fp = c0.FirstParameter()
                 lp = c0.LastParameter()
 
@@ -241,7 +216,7 @@ if __name__ == "__main__":
 
                 c1, f1, l1 = OCC.BRep.BRep_Tool.Curve(e0) # curve and first/last
                 c1 = c1.GetObject() # Get handle of the Geom Curve
-                k1 = get_curve(c1)  # Get actual Geom Curve
+                k1 = CADhelpers.get_curve(c1)  # Get actual Geom Curve
 
         if t == "Geom_BSplineSurface":
             the_wires = aocutils.topology.Topo(face, return_iter=False).wires
@@ -252,7 +227,7 @@ if __name__ == "__main__":
             for j, edge in enumerate(the_edges):
                 c, f, l = OCC.BRep.BRep_Tool.Curve(edge) # curve and first/last
                 c = c.GetObject() # Get handle of the Geom Curve
-                a = get_curve(c)  # Get actual Geom Curve
+                a = CADhelpers.get_curve(c)  # Get actual Geom Curve
                 if a == "Geom_BSplineCurve":
                     fp = c.FirstParameter()
                     lp = c.LastParameter()
@@ -270,7 +245,7 @@ if __name__ == "__main__":
 #    for i, edge in enumerate(the_edges):
 #        c, f, l = OCC.BRep.BRep_Tool.Curve(edge) # curve and
 #        c = c.GetObject()
-#        k = get_curve(c)
+#        k = CADhelpers.get_curve(c)
 #        print("{0} {1} {2} {3}".format( f, l, type(c), k ))
 
     sys.exit(0)
