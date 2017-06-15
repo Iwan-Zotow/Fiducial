@@ -88,24 +88,6 @@ def display_all(display, shape):
     dwires.__name__ = "dwires"
     add_function_to_menu('wires', dwires)
 
-def print_all(shape, separator = None):
-    """
-    Print all pieces of the shape, with optional separator in between
-    """
-    CADhelpers.print_solids(shape)
-    if separator != None:
-        print(separator)
-    CADhelpers.print_shells(shape)
-    if separator != None:
-        print(separator)
-    CADhelpers.print_faces(shape)
-    if separator != None:
-        print(separator)
-    CADhelpers.print_edges(shape)
-    if separator != None:
-        print(separator)
-    CADhelpers.print_wires(shape)
-
 def readSTEP(filename):
     """
     Given the STEP filename, read shapes from it
@@ -178,15 +160,14 @@ if __name__ == "__main__":
 
     #print_flags(sol)
 
-    sep = "          -------------               "
+    sep = "          -----------------             "
     print(sep)
-    print_all(sol, sep)
+    CADhelpers.print_all(sol, sep)
     print(sep)
 
     the_faces = aocutils.topology.Topo(sol, return_iter=False).faces
     for i, face in enumerate(the_faces):
         s = OCC.BRep.BRep_Tool.Surface(face) # make surface from face, get back handle
-        s = s.GetObject()                    # actual object
         t = CADhelpers.get_surface(s)
         print("{0} {1} {2} {3}".format(i, type(face), type(s), t))
         if t == "Geom_Plane":
@@ -201,24 +182,30 @@ if __name__ == "__main__":
                 e0 = edges0[0]
                 e1 = edges1[0]
 
-                c0, f0, l0 = OCC.BRep.BRep_Tool.Curve(e0) # curve and first/last
-                c0 = c0.GetObject() # Get handle of the Geom Curve
+                c0, f0, l0 = OCC.BRep.BRep_Tool.Curve(e0)     # curve handle and first/last
+                if not ("Geom_Circle" in CADhelpers.get_curve(c0)):
+                    raise ValueError("something wrong with the Curve 0")
+                c0 = OCC.Geom.Handle_Geom_Circle.DownCast(c0) # Downcast to circle handle
+                c0 = c0.GetObject() # circle out of the handle
                 k0 = CADhelpers.get_curve(c0)  # Get actual Geom Curve
-                fp = c0.FirstParameter()
-                lp = c0.LastParameter()
+                fp0 = c0.FirstParameter()
+                lp0 = c0.LastParameter()
+                r0  = c0.Radius()
 
-                step = (lp - fp)/100.0
-                pt = OCC.gp.gp_Pnt()
-                for k in range(0, 101):
-                    p = fp + step*float(k)
-                    t = c0.D0(p, pt )
-                    # print("      {0}  {1}  {2}".format(pt.X(), pt.Y(), pt.Z()))
-
-                c1, f1, l1 = OCC.BRep.BRep_Tool.Curve(e0) # curve and first/last
-                c1 = c1.GetObject() # Get handle of the Geom Curve
+                c1, f1, l1 = OCC.BRep.BRep_Tool.Curve(e1)     # curve handle and first/last
+                if not ("Geom_Circle" in CADhelpers.get_curve(c1)):
+                    raise ValueError("something wrong with the Curve 1")
+                c1 = OCC.Geom.Handle_Geom_Circle.DownCast(c1) # Downcast to circle handle
+                c1 = c1.GetObject() # circle out of the handle
                 k1 = CADhelpers.get_curve(c1)  # Get actual Geom Curve
+                fp1 = c1.FirstParameter()
+                lp1 = c1.LastParameter()
+                r1  = c1.Radius()
+                q = c1.Circ()
 
-        if t == "Geom_BSplineSurface":
+                print("  {0} {1} {2} {3} {4} {5}".format(fp0, lp0, r0, fp1, lp1, r1))
+
+        elif t == "Geom_BSplineSurface":
             the_wires = aocutils.topology.Topo(face, return_iter=False).wires
 
             wire  = the_wires[0]
@@ -226,15 +213,17 @@ if __name__ == "__main__":
 
             for j, edge in enumerate(the_edges):
                 c, f, l = OCC.BRep.BRep_Tool.Curve(edge) # curve and first/last
-                c = c.GetObject() # Get handle of the Geom Curve
-                a = CADhelpers.get_curve(c)  # Get actual Geom Curve
-                if a == "Geom_BSplineCurve":
+                if "Geom_BSplineCurve" in CADhelpers.get_curve(c):
+
+                    c = OCC.Geom.Handle_Geom_BSplineCurve.DownCast(c).GetObject()
+
                     fp = c.FirstParameter()
                     lp = c.LastParameter()
 
+                    print("      ------------- {0} {1} {2} {3}".format(j, fp, lp, type(c)))
+
                     step = (lp - fp)/100.0
                     pt = OCC.gp.gp_Pnt()
-                    print("      ------------- {0} {1} {2}".format(j, fp, lp))
                     for k in range(0, 101):
                         p = fp + step*float(k)
                         t = c.D0(p, pt)

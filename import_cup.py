@@ -27,12 +27,47 @@ def display_solids(display, shape, event = None):
     display.FitAll()
     display.View_Iso()
 
-def display_faces(display, shape, event = None):
+def display_facesQ(display, shape, pattern, event = None):
     """
     Display shape faces given the display
     """
     display.EraseAll()
     aocutils.display.topology.faces(display, shape, transparency=0.8)
+    display.FitAll()
+    display.View_Iso()
+
+def display_faces(display, shape, pattern, event = None):
+    """
+    Display shape faces given the display
+    """
+    transparency=0.8
+    show_numbers=True
+    numbers_height=20
+    color_sequence = aocutils.display.color.prism_color_sequence
+
+    display.EraseAll()
+
+    the_faces = aocutils.topology.Topo(shape, return_iter=False).faces
+    print("{0} face(s) to display".format(len(the_faces)))
+    ais_context = display.GetContext().GetObject()
+
+    for i, face in enumerate(the_faces):
+        s = OCC.BRep.BRep_Tool.Surface(face).GetObject() # make surface from face, get back handle
+        t = CADhelpers.get_surface(s)
+        if t != pattern:
+            continue
+
+        print("      {0} #{1}".format(pattern, i))
+        ais_face = OCC.AIS.AIS_Shape(face)
+        ais_face.SetColor(color_sequence[i % len(color_sequence)])
+        ais_face.SetTransparency(transparency)
+        if show_numbers:
+            display.DisplayMessage(point=aocutils.brep.face.Face(face).midpoint,
+                                   text_to_write = "{0}".format(i),
+                                   height=numbers_height,
+                                   message_color=(1, 0, 0))
+        ais_context.Display(ais_face.GetHandle())
+
     display.FitAll()
     display.View_Iso()
 
@@ -76,9 +111,24 @@ def display_all(display, shape):
     dedges.__name__ = "dedges"
     add_function_to_menu('edges', dedges)
     add_menu('faces')
-    dfaces = partial(display_faces, display, shape)
-    dfaces.__name__ = "dfaces"
-    add_function_to_menu('faces', dfaces)
+    dfaces_conical = partial(display_faces, display, shape, "Geom_ConicalSurface")
+    dfaces_conical.__name__ = "Conical"
+    dfaces_cylindrical = partial(display_faces, display, shape, "Geom_CylindricalSurface")
+    dfaces_cylindrical.__name__ = "Cylindrical"
+    dfaces_spherical = partial(display_faces, display, shape, "Geom_SphericalSurface")
+    dfaces_spherical.__name__ = "Spherical"
+    dfaces_bspline = partial(display_faces, display, shape, "Geom_BSplineSurface")
+    dfaces_bspline.__name__ = "BSpline"
+    dfaces_plane =  partial(display_faces, display, shape, "Geom_Plane")
+    dfaces_plane.__name__ = "Plane"
+    dfaces_toro =  partial(display_faces, display, shape, "Geom_ToroidalSurface")
+    dfaces_toro.__name__ = "Toro"
+    add_function_to_menu('faces', dfaces_conical)
+    add_function_to_menu('faces', dfaces_cylindrical)
+    add_function_to_menu('faces', dfaces_spherical)
+    add_function_to_menu('faces', dfaces_bspline)
+    add_function_to_menu('faces', dfaces_plane)
+    add_function_to_menu('faces', dfaces_toro)
     add_menu('shells')
     dshells = partial(display_shells, display, shape)
     dshells.__name__ = "dshells"
@@ -87,25 +137,6 @@ def display_all(display, shape):
     dwires = partial(display_wires, display, shape)
     dwires.__name__ = "dwires"
     add_function_to_menu('wires', dwires)
-
-
-def print_all(shape, separator = None):
-    """
-    Print all pieces of the shape, with optional separator in between
-    """
-    CADhelpers.print_solids(shape)
-    if separator != None:
-        print(separator)
-    CADhelpers.print_shells(shape)
-    if separator != None:
-        print(separator)
-    CADhelpers.print_faces(shape)
-    if separator != None:
-        print(separator)
-    CADhelpers.print_edges(shape)
-    if separator != None:
-        print(separator)
-    CADhelpers.print_wires(shape)
 
 def readSTEP(filename):
     """
@@ -155,11 +186,27 @@ if __name__ == "__main__":
 
     sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S 214.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
 
-    backend = aocutils.display.defaults.backend
-    display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
-    display_all(display, sol)
-    start_display()
+    ##backend = aocutils.display.defaults.backend
+    ##display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
+    ##display_all(display, sol)
+    ##start_display()
 
-    print_flags(sol)
+    #print_flags(sol)
+
+    sep = "          -------------               "
+    #print(sep)
+    #CADhelpers.print_all(sol, sep)
+    #print(sep)
+
+    the_faces = aocutils.topology.Topo(sol, return_iter=False).faces
+
+    for i, face in enumerate(the_faces):
+        r = OCC.BRep.BRep_Tool.Surface(face)
+        s = r.GetObject() # make surface from face, get back handle
+        t = CADhelpers.get_surface(s)
+        print("{0} {1} {2} {3}".format(i, type(face), type(s), t))
+        if t == "Geom_Plane":
+            ss = OCC.Geom.Handle_Geom_Plane_DownCast(r)
+            print("  {0} -> {1}".format(type(r), type(ss)))
 
     sys.exit(0)

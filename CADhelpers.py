@@ -9,26 +9,34 @@ r"""This module several helper functions to deal with CAD STEP data"""
 
 def get_surface(surface):
     """
-    Given surface, return what kind it is
+    Given surface or its handle, return what kind it is
     """
     surfaces = ["Geom_BezierSurface", "Geom_BSplineSurface", "Geom_RectangularTrimmedSurface",
                 "Geom_ConicalSurface", "Geom_CylindricalSurface", "Geom_Plane", "Geom_SphericalSurface",
                 "Geom_ToroidalSurface", "Geom_SurfaceOfLinearExtrusion", "Geom_SurfaceOfRevolution"]
+    ss = surface
+    if "Handle" in str(type(ss)): # we got handle, getting actual surface
+        ss = surface.GetObject()
 
     for s in surfaces:
-        if surface.IsKind(s):
+        if ss.IsKind(s):
             return s
 
     return None
 
 def get_curve(curve):
     """
-    Given curve, return integer kind
+    Given curve or its handle, return what kind it is
     """
     curves = ["Geom_BezierCurve", "Geom_BSplineCurve", "Geom_TrimmedCurve",
               "Geom_Circle", "Geom_Ellipse", "Geom_Hyperbola", "Geom_Parabola"]
+
+    cc = curve
+    if "Handle" in str(type(cc)): # we got handle, getting actual surface
+        cc = curve.GetObject()
+
     for c in curves:
-        if curve.IsKind(c):
+        if cc.IsKind(c):
             return c
 
     return None
@@ -112,3 +120,21 @@ def print_wires(shape):
     the_wires = aocutils.topology.Topo(shape, return_iter=False).wires
     for i, wire in enumerate(the_wires):
         print("{0} {1}".format(i, type(wire)))
+
+def print_all(shape, separator = None):
+    """
+    Print all pieces of the shape, with optional separator in between
+    """
+    print_solids(shape)
+    if separator != None:
+        print(separator)
+    print_shells(shape)
+    if separator != None:
+        print(separator)
+    print_faces(shape)
+    if separator != None:
+        print(separator)
+    print_edges(shape)
+    if separator != None:
+        print(separator)
+    print_wires(shape)
