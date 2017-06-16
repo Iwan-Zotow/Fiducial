@@ -85,7 +85,7 @@ def display_edges(display, shape, event = None):
     Display shape edges given the display
     """
     display.EraseAll()
-    aocutils.display.topology.edges(display, shape, transparency=0.8)
+    aocutils.display.topology.edges(display, shape)
     display.FitAll()
     display.View_Iso()
 
@@ -123,12 +123,15 @@ def display_all(display, shape):
     dfaces_plane.__name__ = "Plane"
     dfaces_toro =  partial(display_faces, display, shape, "Geom_ToroidalSurface")
     dfaces_toro.__name__ = "Toro"
+    dfaces_rect = partial(display_faces, display, shape, "Geom_RectangularTrimmedSurface")
+    dfaces_rect.__name__ = "RecT"
     add_function_to_menu('faces', dfaces_conical)
     add_function_to_menu('faces', dfaces_cylindrical)
     add_function_to_menu('faces', dfaces_spherical)
     add_function_to_menu('faces', dfaces_bspline)
     add_function_to_menu('faces', dfaces_plane)
     add_function_to_menu('faces', dfaces_toro)
+    add_function_to_menu('faces', dfaces_rect)
     add_menu('shells')
     dshells = partial(display_shells, display, shape)
     dshells.__name__ = "dshells"
@@ -156,15 +159,10 @@ def main(filename):
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
     print("Number of shapes: {0}".format(len(shapes)))
     for shape in shapes:
-        print("{0}: {1}".format(shape.ShapeType(), CADhelpers.str_shape(shape.ShapeType())))
-    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-    shape = shapes[0]
-    print(type(shape))
+        print("{0}: {1} {2}".format(shape.ShapeType(), CADhelpers.str_shape(shape.ShapeType()), type(aocutils.topology.shape_to_topology(shape))))
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
     sol = aocutils.topology.shape_to_topology(shape)
-
-    print(type(sol))
 
     return sol
 
@@ -184,12 +182,12 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s :: %(levelname)6s :: %(module)20s :: %(lineno)3d :: %(message)s')
 
-    sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S 214.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
+    sol = main("cups/XMSGP030A10.02-037 NS05 .STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
 
-    ##backend = aocutils.display.defaults.backend
-    ##display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
-    ##display_all(display, sol)
-    ##start_display()
+    backend = aocutils.display.defaults.backend
+    display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
+    display_all(display, sol)
+    start_display()
 
     #print_flags(sol)
 
@@ -201,12 +199,13 @@ if __name__ == "__main__":
     the_faces = aocutils.topology.Topo(sol, return_iter=False).faces
 
     for i, face in enumerate(the_faces):
-        r = OCC.BRep.BRep_Tool.Surface(face)
-        s = r.GetObject() # make surface from face, get back handle
+        s = OCC.BRep.BRep_Tool.Surface(face) # get handle to the surface
         t = CADhelpers.get_surface(s)
         print("{0} {1} {2} {3}".format(i, type(face), type(s), t))
-        if t == "Geom_Plane":
-            ss = OCC.Geom.Handle_Geom_Plane_DownCast(r)
-            print("  {0} -> {1}".format(type(r), type(ss)))
+        if "Geom_SphericalSurface" in t:
+            rs = CADhelpers.convert_surface(s).GetObject()
+            spl = rs.Location()
+            spp = rs.Position()
+            print("{0} {1} {2} {3}".format(rs.Radius(), spl.X(), spl.Y(), spl.Z()))
 
     sys.exit(0)

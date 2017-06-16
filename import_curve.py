@@ -50,7 +50,7 @@ def display_edges(display, shape, event = None):
     Display shape edges given the display
     """
     display.EraseAll()
-    aocutils.display.topology.edges(display, shape, transparency=0.8)
+    aocutils.display.topology.edges(display, shape)
     display.FitAll()
     display.View_Iso()
 

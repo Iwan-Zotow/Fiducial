@@ -81,6 +81,39 @@ def factory_shapes(shape):
 
     return None
 
+def convert_surface(surface):
+    """
+    Given the surface to actual one
+    """
+
+    if not ("Handle" in str(type(surface))): # it is not a handle, bail out
+        return None
+
+    ss = get_surface(surface)
+    if ss is None:
+        return None
+
+    if ss == "Geom_BezierSurface":
+        return OCC.Geom.Handle_Geom_BezierSurface.DownCast(surface)
+    if ss == "Geom_BSplineSurface":
+        return OCC.Geom.Handle_Geom_BSplineSurface.DownCast(surface)
+    if ss == "Geom_RectangularTrimmedSurface":
+        return OCC.Geom.Handle_Geom_RectangularTrimmedSurface.DownCast(surface)
+    if ss == "Geom_ConicalSurface":
+        return OCC.Geom.Handle_Geom_ConicalSurface.DownCast(surface)
+    if ss == "Geom_Plane":
+        return OCC.Geom.Handle_Geom_Plane.DownCast(surface)
+    if ss == "Geom_SphericalSurface":
+        return OCC.Geom.Handle_Geom_SphericalSurface.DownCast(surface)
+    if ss == "Geom_ToroidalSurface":
+        return OCC.Geom.Handle_Geom_ToroidalSurface.DownCast(surface)
+    if ss == "Geom_SurfaceOfLinearExtrusion":
+        return OCC.Geom.Handle_Geom_SurfaceOfLinearExtrusion.DownCast(surface)
+    if ss == "Geom_SurfaceOfRevolution":
+        return OCC.Geom.Handle_Geom_SurfaceOfRevolution.DownCast(surface)
+
+    return None
+
 def print_solids(shape):
     """
     print solids of the shape
