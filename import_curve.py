@@ -201,33 +201,39 @@ if __name__ == "__main__":
                 fp1 = c1.FirstParameter()
                 lp1 = c1.LastParameter()
                 r1  = c1.Radius()
-                q = c1.Circ()
 
                 print("  {0} {1} {2} {3} {4} {5}".format(fp0, lp0, r0, fp1, lp1, r1))
 
         elif t == "Geom_BSplineSurface":
-            the_wires = aocutils.topology.Topo(face, return_iter=False).wires
 
-            wire  = the_wires[0]
-            the_edges = aocutils.topology.Topo(wire, return_iter=False).edges
+            ss = CADhelpers.cast_surface(s).GetObject()
+            print("    {0} {1} {2} {3}".format(i, type(ss), CADhelpers.get_surface(ss), t))
+            print("    {0} {1} {2} {3}".format(ss.IsUClosed(), ss.IsUPeriodic(), ss.IsVClosed(), ss.IsVPeriodic()))
 
-            for j, edge in enumerate(the_edges):
-                c, f, l = OCC.BRep.BRep_Tool.Curve(edge) # curve and first/last
-                if "Geom_BSplineCurve" in CADhelpers.get_curve(c):
 
-                    c = OCC.Geom.Handle_Geom_BSplineCurve.DownCast(c).GetObject()
 
-                    fp = c.FirstParameter()
-                    lp = c.LastParameter()
+            # the_wires = aocutils.topology.Topo(face, return_iter=False).wires
 
-                    print("      ------------- {0} {1} {2} {3}".format(j, fp, lp, type(c)))
+            # wire  = the_wires[0]
+            # the_edges = aocutils.topology.Topo(wire, return_iter=False).edges
 
-                    step = (lp - fp)/100.0
-                    pt = OCC.gp.gp_Pnt()
-                    for k in range(0, 101):
-                        p = fp + step*float(k)
-                        t = c.D0(p, pt)
-                        print("      {0}  {1}  {2}".format(pt.X(), pt.Y(), pt.Z()))
+            # for j, edge in enumerate(the_edges):
+            #     c, f, l = OCC.BRep.BRep_Tool.Curve(edge) # curve and first/last
+            #     if "Geom_BSplineCurve" in CADhelpers.get_curve(c):
+
+            #         c = OCC.Geom.Handle_Geom_BSplineCurve.DownCast(c).GetObject()
+
+            #         fp = c.FirstParameter()
+            #         lp = c.LastParameter()
+
+            #         print("      ------------- {0} {1} {2} {3}".format(j, fp, lp, type(c)))
+
+            #         step = (lp - fp)/100.0
+            #         pt = OCC.gp.gp_Pnt()
+            #         for k in range(0, 101):
+            #             p = fp + step*float(k)
+            #             t = c.D0(p, pt)
+            #             print("      {0}  {1}  {2}".format(pt.X(), pt.Y(), pt.Z()))
 
 #    print(sep)
 #    the_edges = aocutils.topology.Topo(sol, return_iter=False).edges
