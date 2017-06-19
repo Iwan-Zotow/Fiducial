@@ -203,7 +203,7 @@ if __name__ == "__main__":
         t = CADhelpers.get_surface(s)
         print("{0} {1} {2} {3}".format(i, type(face), type(s), t))
         if "Geom_SphericalSurface" in t:
-            rs = CADhelpers.convert_surface(s).GetObject()
+            rs = CADhelpers.cast_surface(s).GetObject()
             spl = rs.Location()
             spp = rs.Position()
             print("{0} {1} {2} {3}".format(rs.Radius(), spl.X(), spl.Y(), spl.Z()))

@@ -5,7 +5,7 @@
 
     "command": "python",
     "windows": {
-        "command": "d:\\Anaconda2\\python.exe"
+        "command": "python.exe"
     },
 
         // The command is a shell script

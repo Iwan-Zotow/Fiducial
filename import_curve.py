@@ -151,6 +151,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s :: %(levelname)6s :: %(module)20s :: %(lineno)3d :: %(message)s')
 
+    sep = "          -----------------             "
     sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S fiducial wire.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
 
     #backend = aocutils.display.defaults.backend
@@ -160,7 +161,6 @@ if __name__ == "__main__":
 
     #print_flags(sol)
 
-    sep = "          -----------------             "
     print(sep)
     CADhelpers.print_all(sol, sep)
     print(sep)
@@ -210,7 +210,7 @@ if __name__ == "__main__":
             print("    {0} {1} {2} {3}".format(i, type(ss), CADhelpers.get_surface(ss), t))
             print("    {0} {1} {2} {3}".format(ss.IsUClosed(), ss.IsUPeriodic(), ss.IsVClosed(), ss.IsVPeriodic()))
 
-
+        print(sep)
 
             # the_wires = aocutils.topology.Topo(face, return_iter=False).wires
 
