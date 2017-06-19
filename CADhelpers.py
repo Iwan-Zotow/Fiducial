@@ -7,13 +7,18 @@ import aocutils.display.topology
 
 r"""This module several helper functions to deal with CAD STEP data"""
 
+surfaces = ["Geom_BezierSurface", "Geom_BSplineSurface", "Geom_RectangularTrimmedSurface",
+            "Geom_ConicalSurface", "Geom_CylindricalSurface", "Geom_Plane", "Geom_SphericalSurface",
+            "Geom_ToroidalSurface", "Geom_SurfaceOfLinearExtrusion", "Geom_SurfaceOfRevolution"]
+
+curves = ["Geom_BezierCurve", "Geom_BSplineCurve", "Geom_TrimmedCurve",
+          "Geom_Circle", "Geom_Ellipse", "Geom_Hyperbola", "Geom_Parabola",
+          "Geom_Line", "Geom_OffsetCurve", "ShapeExtend_ComplexCurve"]
+
 def get_surface(surface):
     """
     Given surface or its handle, return what kind it is
     """
-    surfaces = ["Geom_BezierSurface", "Geom_BSplineSurface", "Geom_RectangularTrimmedSurface",
-                "Geom_ConicalSurface", "Geom_CylindricalSurface", "Geom_Plane", "Geom_SphericalSurface",
-                "Geom_ToroidalSurface", "Geom_SurfaceOfLinearExtrusion", "Geom_SurfaceOfRevolution"]
     ss = surface
     if "Handle" in str(type(ss)): # we got handle, getting actual surface
         ss = surface.GetObject()
@@ -28,9 +33,6 @@ def get_curve(curve):
     """
     Given curve or its handle, return what kind it is
     """
-    curves = ["Geom_BezierCurve", "Geom_BSplineCurve", "Geom_TrimmedCurve",
-              "Geom_Circle", "Geom_Ellipse", "Geom_Hyperbola", "Geom_Parabola"]
-
     cc = curve
     if "Handle" in str(type(cc)): # we got handle, getting actual surface
         cc = curve.GetObject()
@@ -81,9 +83,9 @@ def factory_shapes(shape):
 
     return None
 
-def convert_surface(surface):
+def cast_surface(surface):
     """
-    Given the surface to actual one
+    Given the base surface handle, cast it to the actual one
     """
 
     if not ("Handle" in str(type(surface))): # it is not a handle, bail out
@@ -111,6 +113,41 @@ def convert_surface(surface):
         return OCC.Geom.Handle_Geom_SurfaceOfLinearExtrusion.DownCast(surface)
     if ss == "Geom_SurfaceOfRevolution":
         return OCC.Geom.Handle_Geom_SurfaceOfRevolution.DownCast(surface)
+
+    return None
+
+def cast_curve(curve):
+    """
+    Given the base curve handle, cast it to the actual one
+    """
+
+    if not ("Handle" in str(type(curve))): # it is not a handle, bail out
+        return None
+
+    cc = get_curve(curve)
+    if cc is None:
+        return None
+
+    if cc == "Geom_BezierCurve":
+        return OCC.Geom.Handle_Geom_BezierCurve.DownCast(curve)
+    if cc == "Geom_BSplineCurve":
+        return OCC.Geom.Handle_Geom_BSplineCurve.DownCast(curve)
+    if cc == "Geom_TrimmedCurve":
+        return OCC.Geom.Handle_Geom_TrimmedCurve.DownCast(curve)
+    if cc == "Geom_Circle":
+        return OCC.Geom.Handle_Geom_Circle.DownCast(curve)
+    if cc == "Geom_Ellipse":
+        return OCC.Geom.Handle_Geom_Ellipse.DownCast(curve)
+    if cc == "Geom_Hyperbola":
+        return OCC.Geom.Handle_Geom_Hyperbola.DownCast(curve)
+    if cc == "Geom_Parabola":
+        return OCC.Geom.Handle_Geom_Parabola.DownCast(curve)
+    if cc == "Geom_Line":
+        return OCC.Geom.Handle_Geom_Line.DownCast(curve)
+    if cc == "Geom_OffsetCurve":
+        return OCC.Geom.Handle_Geom_OffsetCurve.DownCast(curve)
+    if cc == "ShapeExtend_ComplexCurve":
+        return OCC.Geom.Handle_ShapeExtend_ComplexCurve.DownCast(curve)
 
     return None
 

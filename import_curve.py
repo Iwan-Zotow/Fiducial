@@ -170,7 +170,7 @@ if __name__ == "__main__":
         s = OCC.BRep.BRep_Tool.Surface(face) # make surface from face, get back handle
         t = CADhelpers.get_surface(s)
         print("{0} {1} {2} {3}".format(i, type(face), type(s), t))
-        if t == "Geom_Plane":
+        if "Geom_Plane" in t:
             the_wires = aocutils.topology.Topo(face, return_iter=False).wires
             if len(the_wires) == 2:
                 wire0 = the_wires[0]
