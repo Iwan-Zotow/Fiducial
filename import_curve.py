@@ -147,6 +147,56 @@ def print_flags(shape):
     print(shape.Free())
     print(shape.Infinite())
 
+def compute_bspline_midline(bspline, Nv = 100, Nu = 256):
+    """
+    Given the bspline surface with one open and one closed/periodic parameter,
+    compute middle/center line assuming closed parameter is a circle
+
+    Nu - number of points in U space, how much points will be returned
+    Nv - number of points in V space, how much to use to compute middle point
+
+    Returns array of 3d points
+    """
+
+    if bspline is None:
+        return None
+
+    if "Geom_BSplineSurface" not in str(type(bspline)):
+        return None
+
+    if not bspline.IsUClosed():
+        return None
+
+    if not bspline.IsUPeriodic():
+        return None
+
+    U1, U2, V1, V2 = bspline.Bounds()
+
+    rc = list()
+
+    pt = OCC.gp.gp_Pnt()
+
+    vstep = (V2 - V1) / float(Nv)
+    ustep = (U2 - U1) / float(Nu)
+    uwght = 1.0 / float(Nu)
+    for kv in range(0, Nv+1):
+        v = V1 + vstep * float(kv)
+        x = 0.0
+        y = 0.0
+        z = 0.0
+        for ku in range(0, Nu+1):
+            u = U1 + ustep * float(ku)
+            ss.D0(u, v, pt)
+            x += pt.X()
+            y += pt.Y()
+            z += pt.Z()
+
+        rc.append(OCC.gp.gp_Pnt(uwght*x, uwght*y, uwght*z))
+
+    if len(rc) == 0:
+        return None
+    return rc
+
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s :: %(levelname)6s :: %(module)20s :: %(lineno)3d :: %(message)s')
@@ -154,10 +204,10 @@ if __name__ == "__main__":
     sep = "          -----------------             "
     sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S fiducial wire.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
 
-    #backend = aocutils.display.defaults.backend
-    #display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
-    #display_all(display, sol)
-    #start_display()
+    # backend = aocutils.display.defaults.backend
+    # display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
+    # display_all(display, sol)
+    # start_display()
 
     #print_flags(sol)
 
@@ -207,10 +257,23 @@ if __name__ == "__main__":
         elif t == "Geom_BSplineSurface":
 
             ss = CADhelpers.cast_surface(s).GetObject()
-            print("    {0} {1} {2} {3}".format(i, type(ss), CADhelpers.get_surface(ss), t))
-            print("    {0} {1} {2} {3}".format(ss.IsUClosed(), ss.IsUPeriodic(), ss.IsVClosed(), ss.IsVPeriodic()))
+            print("  {0} {1} {2} {3}".format(i, type(ss), CADhelpers.get_surface(ss), t))
 
-        print(sep)
+            if ss.IsUClosed() and ss.IsUPeriodic() and not ss.IsVClosed() and not ss.IsVPeriodic():
+                print("    {0} {1} {2} {3}".format(ss.IsUClosed(), ss.IsUPeriodic(), ss.IsVClosed(), ss.IsVPeriodic()))
+            else:
+                continue
+
+            U1, U2, V1, V2 = ss.Bounds()
+            print("      {0} {1} {2} {3}".format(U1, U2, V1, V2))
+
+            print(sep)
+            pts = compute_bspline_midline(ss)
+            if pts is None:
+                raise RuntimeError("Something wrong with ")
+            for pt in pts:
+                print("        {0}  {1}  {2}".format(pt.X(), pt.Y(), pt.Z()))
+            print(sep)
 
             # the_wires = aocutils.topology.Topo(face, return_iter=False).wires
 
