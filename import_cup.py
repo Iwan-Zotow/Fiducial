@@ -182,7 +182,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s :: %(levelname)6s :: %(module)20s :: %(lineno)3d :: %(message)s')
 
-    sol = main("cups/XMSGP030A10.02-037 NS05 .STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
+    sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S 214.STEP") # "cups/XMSGP030A10.02-037 NS05 .STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
 
     backend = aocutils.display.defaults.backend
     display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)

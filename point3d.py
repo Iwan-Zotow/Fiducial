@@ -54,6 +54,16 @@ class point3d(object):
         """
         return self._z
 
+    @staticmethod
+    def cvt2array(tuples):
+        """
+        Convert list of tuples into list of points
+        """
+        rc = []
+        for t in tuples:
+            rc.append(point3d(np.float32(t[X]), np.float32(t[Y]), np.float32(t[Z])))
+        return rc
+
     def __str__(self):
 
         """

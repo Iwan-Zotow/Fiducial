@@ -3,7 +3,11 @@
 from __future__ import print_function
 
 import sys
+import math
+import numpy as np
 import logging
+
+from functools import partial
 
 import OCC.TopoDS
 import OCC.Display.SimpleGui
@@ -16,7 +20,13 @@ import aocxchange.utils
 
 import CADhelpers
 
-from functools import partial
+from XcMath          import utils
+from XcIO.write_OCP  import write_OCP
+
+from rdp             import rdp
+
+from point3d import point3d
+from point2d import point2d
 
 def display_solids(display, shape, event = None):
     """
@@ -113,7 +123,6 @@ def print_shapes():
     print(OCC.TopAbs.TopAbs_VERTEX)
     print("----------------------------")
 
-
 def main(filename):
     """
     process single fiducial from filename
@@ -147,7 +156,7 @@ def print_flags(shape):
     print(shape.Free())
     print(shape.Infinite())
 
-def compute_bspline_midline(bspline, Nv = 100, Nu = 256):
+def compute_bspline_midline(bspline, Nv = 100, Nu = 1024):
     """
     Given the bspline surface with one open and one closed/periodic parameter,
     compute middle/center line assuming closed parameter is a circle
@@ -155,9 +164,8 @@ def compute_bspline_midline(bspline, Nv = 100, Nu = 256):
     Nu - number of points in U space, how much points will be returned
     Nv - number of points in V space, how much to use to compute middle point
 
-    Returns array of 3d points
+    Returns array of 3d points for curve, array of 2d points for cup outline
     """
-
     if bspline is None:
         return None
 
@@ -172,30 +180,117 @@ def compute_bspline_midline(bspline, Nv = 100, Nu = 256):
 
     U1, U2, V1, V2 = bspline.Bounds()
 
-    rc = list()
+    r2 = list()
+    r3 = list()
 
     pt = OCC.gp.gp_Pnt()
 
     vstep = (V2 - V1) / float(Nv)
     ustep = (U2 - U1) / float(Nu)
     uwght = 1.0 / float(Nu)
+
     for kv in range(0, Nv+1):
-        v = V1 + vstep * float(kv)
+        v = utils.clamp(V1 + vstep * float(kv), 0.0, 1.0)
         x = 0.0
         y = 0.0
         z = 0.0
+        rmin = 1000000000.0
+        ymin = 0.0
         for ku in range(0, Nu+1):
-            u = U1 + ustep * float(ku)
+            u = utils.clamp(U1 + ustep * float(ku), 0.0, 1.0)
             ss.D0(u, v, pt)
             x += pt.X()
             y += pt.Y()
             z += pt.Z()
+            r = utils.squared(pt.X()) + utils.squared(pt.Z())
+            if r < rmin:
+                rmin = r
+                ymin = pt.Y()
 
-        rc.append(OCC.gp.gp_Pnt(uwght*x, uwght*y, uwght*z))
+        r2.append(point2d(ymin, math.sqrt(rmin)))
+        r3.append(point3d(uwght*x, uwght*y, uwght*z)) # r3.append(point3d(v, uwght*y, uwght*z))
 
-    if len(rc) == 0:
+    if len(r3) == 0:
         return None
-    return rc
+
+    return (r3, r2)
+
+def convert_fiducial(pts, origin):
+    """
+    Convert fiducial curve from list of points into proper OCP format
+    """
+    xfc = list()
+    yfc = list()
+    zfc = list()
+
+    for pt in pts:
+        xfc.append(-pt.z)
+        yfc.append(pt.x)
+        zfc.append( - (pt.y - origin))
+
+    return (xfc, yfc, zfc)
+
+def convert_outline(pts, origin):
+    """
+    Convert 2d points fiducial curve from list of points into proper OCP format
+    """
+    xow = list()
+    yow = list()
+    xiw = list()
+    yiw = list()
+
+    thickness = 2.0
+
+    rprev = 111111.0
+    for pt in pts:
+        y = pt.x
+        r = pt.y
+        if r > rprev:
+            break
+        l  = math.sqrt(y*y + r*r)
+        wr = r / l
+        wy = y / l
+        xow.append(y)
+        yow.append(r)
+        xiw.append(y - wy*thickness)
+        yiw.append(r - wr*thickness)
+        rprev = r
+
+    xow.append(origin - 2.0)
+    yow.append(0.0)
+
+    xiw.append(origin - 2.0 + thickness)
+    yiw.append(0.0)
+
+    # revert outer and place relative to origin
+    xxow = list()
+    yyow = list()
+    for y, r in zip(xow, yow):
+        xxow.insert(0, origin - y)
+        yyow.insert(0, r)
+    del yow
+    del xow
+
+    t = xxow[-1]
+    xxow.append(t)
+    yyow.append(8.138100e+01)
+    xxow.append(-99.0)
+    yyow.append(8.600000e+01)
+    xxow.append(-99.0)
+    yyow.append(8.800000e+01)
+    xxow.append(origin)
+    yyow.append(8.800000e+01)
+
+    # revert inner and place relative to origin
+    xxiw = list()
+    yyiw = list()
+    for y, r in zip(xiw, yiw):
+        xxiw.insert(0, origin - y)
+        yyiw.insert(0, r)
+    del yiw
+    del xiw
+
+    return xxow, yyow, xxiw, yyiw
 
 if __name__ == "__main__":
 
@@ -268,12 +363,35 @@ if __name__ == "__main__":
             print("      {0} {1} {2} {3}".format(U1, U2, V1, V2))
 
             print(sep)
-            pts = compute_bspline_midline(ss)
+            pts, outline = compute_bspline_midline(ss, Nv = 128)
             if pts is None:
                 raise RuntimeError("Something wrong with ")
-            for pt in pts:
-                print("        {0}  {1}  {2}".format(pt.X(), pt.Y(), pt.Z()))
+
+            xfc, yfc, zfc      = convert_fiducial(pts, origin = -101.0)
+            xow, yow, xiw, yiw = convert_outline(outline, origin = -101.0)
+
+            for x, y, z in map(lambda x, y, z: (x,y,z), xfc, yfc, zfc) :
+                print("        {0}    {1}    {2}".format(x, y, z))
             print(sep)
+            for y, r in map(lambda x, y: (x,y), xow, yow):
+                print("        {0}    {1}".format(y, r))
+            print(sep)
+            for y, r in map(lambda x, y: (x,y), xiw, yiw):
+                print("        {0}    {1}".format(y, r))
+            print(sep)
+
+            iw = [point2d(np.float32(x), np.float32(y)) for x, y in zip(xiw, yiw)]
+            iw = point2d.remove_dupes(iw, 0.5)
+
+            ow = [point2d(np.float32(x), np.float32(y)) for x, y in zip(xow, yow)]
+            ow = point2d.remove_dupes(ow, 0.5)
+
+            fc = list(zip(xfc, yfc, zfc))
+            fc = point3d.cvt2array(rdp(fc, 0.01))
+
+            write_OCP(8, 1, 101, iw, ow, fc)
+
+            break
 
             # the_wires = aocutils.topology.Topo(face, return_iter=False).wires
 
