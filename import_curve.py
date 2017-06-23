@@ -19,82 +19,38 @@ import aocxchange.step
 import aocxchange.utils
 
 import CADhelpers
+import DISPhelpers
 
 from XcMath          import utils
 from XcIO.write_OCP  import write_OCP
 
 from rdp             import rdp
 
-from point3d import point3d
 from point2d import point2d
-
-def display_solids(display, shape, event = None):
-    """
-    Display shape solids given the display
-    """
-    display.EraseAll()
-    aocutils.display.topology.solids(display, shape, transparency=0.8)
-    display.FitAll()
-    display.View_Iso()
-
-def display_faces(display, shape, event = None):
-    """
-    Display shape faces given the display
-    """
-    display.EraseAll()
-    aocutils.display.topology.faces(display, shape, transparency=0.8)
-    display.FitAll()
-    display.View_Iso()
-
-def display_shells(display, shape, event = None):
-    """
-    Display shape shells given the display
-    """
-    display.EraseAll()
-    aocutils.display.topology.shells(display, shape, transparency=0.8)
-    display.FitAll()
-    display.View_Iso()
-
-def display_edges(display, shape, event = None):
-    """
-    Display shape edges given the display
-    """
-    display.EraseAll()
-    aocutils.display.topology.edges(display, shape)
-    display.FitAll()
-    display.View_Iso()
-
-def display_wires(display, shape, event = None):
-    """
-    Display shape wires given the display
-    """
-    display.EraseAll()
-    aocutils.display.topology.wires(display, shape)
-    display.FitAll()
-    display.View_Iso()
+from point3d import point3d
 
 def display_all(display, shape):
     """
     display every part of the shape
     """
     add_menu('solids')
-    dsolids = partial(display_solids, display, shape)
+    dsolids = partial(DISPhelpers.display_solids, display, shape)
     dsolids.__name__ = "dsolids"
     add_function_to_menu('solids', dsolids)
     add_menu('edges')
-    dedges = partial(display_edges, display, shape)
+    dedges = partial(DISPhelpers.display_edges, display, shape)
     dedges.__name__ = "dedges"
     add_function_to_menu('edges', dedges)
     add_menu('faces')
-    dfaces = partial(display_faces, display, shape)
+    dfaces = partial(DISPhelpers.display_faces, display, shape)
     dfaces.__name__ = "dfaces"
     add_function_to_menu('faces', dfaces)
     add_menu('shells')
-    dshells = partial(display_shells, display, shape)
+    dshells = partial(DISPhelpers.display_shells, display, shape)
     dshells.__name__ = "dshells"
     add_function_to_menu('shells', dshells)
     add_menu('wires')
-    dwires = partial(display_wires, display, shape)
+    dwires = partial(DISPhelpers.display_wires, display, shape)
     dwires.__name__ = "dwires"
     add_function_to_menu('wires', dwires)
 
@@ -190,14 +146,14 @@ def compute_bspline_midline(bspline, Nv = 100, Nu = 1024):
     uwght = 1.0 / float(Nu)
 
     for kv in range(0, Nv+1):
-        v = utils.clamp(V1 + vstep * float(kv), 0.0, 1.0)
+        v = utils.clamp(V1 + vstep * float(kv), V1, V2)
         x = 0.0
         y = 0.0
         z = 0.0
         rmin = 1000000000.0
         ymin = 0.0
         for ku in range(0, Nu+1):
-            u = utils.clamp(U1 + ustep * float(ku), 0.0, 1.0)
+            u = utils.clamp(U1 + ustep * float(ku), U1, U2)
             ss.D0(u, v, pt)
             x += pt.X()
             y += pt.Y()
