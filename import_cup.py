@@ -2,6 +2,9 @@
 
 import sys
 import logging
+import math
+
+from functools import partial
 
 import OCC.TopoDS
 import OCC.Display.SimpleGui
@@ -20,7 +23,7 @@ from point3d       import point3d
 import CADhelpers
 import DISPhelpers
 
-from functools import partial
+from XcIO.write_OCP  import write_OCP
 
 def display_faces(display, shape, pattern: str, event = None) -> None:
     """
@@ -136,44 +139,114 @@ def main(filename: str):
 
 def make_cup_shell(surfaces):
     """
-    Given list of surfaces, print cup shell
+    Given list of surfaces, computes and returns (y, r) tuple of the cup shell
     """
-
     sphere = surfaces[0]
     cone   = surfaces[1]
     top    = surfaces[2]
+
+    print("Q {0} {1} {2}".format(type(sphere), type(cone), type(top)))
 
     U1s, U2s, V1s, V2s = sphere.Bounds()
     U1c, U2c, V1c, V2c = cone.Bounds()
     U1t, U2t, V1t, V2t = top.Bounds()
 
-    xc = list()
+    # print("QA {0} {1} {2} {3}".format(U1s, U2s, V1s, V2s))
+    # print("QB {0} {1} {2} {3}".format(U1c, U2c, V1c, V2c))
+    # print("QC {0} {1} {2} {3}".format(U1t, U2t, V1t, V2t))
+
+    rc = list()
     yc = list()
 
     pt = OCC.gp.gp_Pnt()
+
+    # determine where spehre ends
+    u = 0.0
+    v = V1c
+    cone.D0(u, v, pt)
+    ymin = pt.Y()
+
+    # sphere first
     Nv = 40
+    u = math.pi / 2.0
+    ve = 0.5*(V1s + V2s)
+    for k in range(0, Nv+1):
+        v = utils.clamp(V1s + float(k)*(ve - V1s)/float(Nv), V1s, V2s)
+        sphere.D0(u, v, pt)
+        if pt.Y() > ymin:
+            continue
+        # insert in reverse order
+        yc.insert(0, pt.Y())
+        rc.insert(0, pt.Z())
+
+    # cone
     u = 0.0
     for k in range(0, Nv+1):
-        v = utils.clamp(0.0 + float(k)*V2s/float(Nv), V1s, V2s)
-        sphere.D0(u, v, pt)
-        xc.append(pt.Y())
-        yc.append(pt.Z()) # or Z
-
-    for k in range(0, Nv+1):
-        v = utils.clamp(V1c + float(k)*V2c/float(Nv), V1c, V2c)
+        v = utils.clamp(V1c + float(k)*(V2c - V1c)/float(Nv), V1c, V2c)
         cone.D0(u, v, pt)
-        xc.append(pt.Y())
-        yc.append(pt.Z()) # or Z
+        yc.append(pt.Y())
+        rc.append(pt.Z())
 
-    Nv = 10
+    # top
+    Nv = 4
+    u = 0.0
     for k in range(0, Nv+1):
-        v = utils.clamp(V1t + float(k)*V2t/float(Nv), V1t, V2t)
-        cone.D0(u, v, pt)
-        xc.append(pt.Y())
-        yc.append(pt.Z()) # or Z
+        v = utils.clamp(V1t + float(k)*(V2t - V1t)/float(Nv), V1t, V2t)
+        top.D0(u, v, pt)
+        yc.append(pt.Y())
+        rc.append(pt.Z())
 
     # print("rrr {0} {1} {2}".format((U1s, U2s, V1s, V2s), (U1c, U2c, V1c, V2c), (U1t, U2t, V1t, V2t)) )
-    return (xc, yc)
+    return (yc, rc)
+
+def write_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row):
+    """
+    write to stdout ICP file
+    """
+    if RU is None:
+        return
+
+    if yiw is None:
+        return
+
+    if riw is None:
+        return
+
+    if yow is None:
+        return
+
+    if row is None:
+        return
+
+    # RU
+    sys.stdout.write(RU)
+    sys.stdout.write("\n")
+
+    # Outer cup
+    sys.stdout.write(OuterCup)
+    sys.stdout.write("\n")
+
+    # Inner cup
+    sys.stdout.write(InnerCup)
+    sys.stdout.write("\n")
+
+    # nof points in the inner wall
+    niw = len(riw)
+    sys.stdout.write(str(niw))
+    sys.stdout.write("\n")
+
+    # inner wall
+    for r, y in zip(row, yow):
+        sys.stdout.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
+
+    # nof points in the outer wall
+    now = len(row)
+    sys.stdout.write(str(now))
+    sys.stdout.write("\n")
+
+    # outer wall
+    for r, y in zip(riw, yiw):
+        sys.stdout.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
 
 
 if __name__ == "__main__":
@@ -214,35 +287,34 @@ if __name__ == "__main__":
             print("    {0} {1} {2} {3}".format(U1, U2, V1, V2))
 
             blocks = CADhelpers.surface2gnuplot(ss)
-            CADhelpers.save_gnuplot_surface("sphere", i, blocks)
+            CADhelpers.save_gnuplot_surface("sphere", i, blocks, True)
 
         elif "Geom_ConicalSurface" in t:
             ss = CADhelpers.cast_surface(s).GetObject() # specific surface
             cone = ss.Cone()
             blocks = CADhelpers.surface2gnuplot(ss)
-            CADhelpers.save_gnuplot_surface("cone", i, blocks)
+            CADhelpers.save_gnuplot_surface("cone", i, blocks, True)
 
         elif "Geom_RectangularTrimmedSurface" in t:
             ss = CADhelpers.cast_surface(s).GetObject() # specific surface
             blocks = CADhelpers.surface2gnuplot(ss)
-            CADhelpers.save_gnuplot_surface("trim", i, blocks)
+            CADhelpers.save_gnuplot_surface("trim", i, blocks, True)
             bs = CADhelpers.cast_surface(ss.BasisSurface()).GetObject()
-            if "Geom_ConicalSurface" in str(type(bs)):
-                CADhelpers.save_gnuplot_surface("conet", i, blocks)
+            #if "Geom_ConicalSurface" in str(type(bs)):
+            #    CADhelpers.save_gnuplot_surface("conet", i, blocks, True)
 
     outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[14])).GetObject())
     outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[0])).GetObject())
     outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[11])).GetObject())
 
     print(sep)
+
     for k, o in enumerate(outer):
         t = CADhelpers.get_surface(o)
         print("{0} {1} {2}".format(k, type(o), t))
     print(sep)
 
-    xc, yc = make_cup_shell(outer)
-    for x, y in zip(xc, yc):
-        print("        {0}   {1}".format(x, y))
+    yow, row  = make_cup_shell(outer)
 
     print(sep)
 
@@ -255,6 +327,10 @@ if __name__ == "__main__":
         print("{0} {1} {2}".format(k, type(i), t))
     print(sep)
 
-    make_cup_shell(inner)
+    yiw, riw = make_cup_shell(inner)
+
+    print(sep)
+
+    write_ICP("8", "1", "S05", -101.0, yiw, riw, yow, row)
 
     sys.exit(0)

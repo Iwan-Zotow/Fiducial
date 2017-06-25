@@ -8,6 +8,7 @@ import aocutils.display.topology
 from XcMath        import utils
 
 from point3d       import point3d
+from point2d       import point2d
 
 # http://opencascade.blogspot.com/2009/02/topology-and-geometry-in-open-cascade_12.html
 
@@ -227,7 +228,8 @@ def print_all(shape, separator = None):
 
 def surface2gnuplot(surface, Nu:int = 40, Nv:int = 40) -> List[List[point3d]]:
     """
-    Makes gnuplot representation of a surface
+    Makes gnuplot representation of a surface,
+    returns both spatial values and parameters
     """
     U1, U2, V1, V2 = surface.Bounds()
 
@@ -254,14 +256,15 @@ def surface2gnuplot(surface, Nu:int = 40, Nv:int = 40) -> List[List[point3d]]:
         for kv in range(0, Nv+1):
             v = utils.clamp(V1 + float(kv)*stepv, V1, V2)
             surface.D0(u, v, pt)
-            block.append(point3d(pt.X(), pt.Z(), pt.Y()))
+            block.append((point3d(pt.X(), pt.Z(), pt.Y()), point2d(u, v)))
         blocks.append(block)
 
     return blocks
 
-def save_gnuplot_surface(prefix: str, i:int, blocks):
+def save_gnuplot_surface(prefix: str, i:int, blocks, full: bool = False):
     """
-    Save sphere block in the gnuplot format
+    Save sphere block in the gnuplot format,
+    if full is set, print parameters as well
     """
     if blocks is None:
         return
@@ -270,7 +273,11 @@ def save_gnuplot_surface(prefix: str, i:int, blocks):
     with open(fname, "w", encoding="utf-8") as f:
         for block in blocks:
             for pt in block:
-                s = "  {0}    {1}    {2}\n".format(pt.x, pt.y, pt.z)
+                pt3, pt2 = pt
+                if full:
+                    s = "  {0}    {1}    {2}    {3}    {4}\n".format(pt3.x, pt3.y, pt3.z, pt2.x, pt2.y)
+                else:
+                    s = "  {0}    {1}    {2}\n".format(pt3.x, pt3.y, pt3.z)
                 f.write(s)
             f.write("\n")
 
