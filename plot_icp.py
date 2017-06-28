@@ -1,5 +1,4 @@
-
-# <codecell>
+#%%
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,12 +53,13 @@ def readICP(fname):
 
     return None
 
-ziwO, riwO, zowO, rowO = readICP("D:/Ceres/Resource/PlanEngine/R8/Cup/R8O1IS04.icp")
+ziwO, riwO, zowO, rowO = readICP("D:/Ceres/Resource/PlanEngine/R8/Cup/R8O1IS01.icp")
+#ziwO, riwO, zowO, rowO = readICP("R8O1IS02.icp")
 
 l_innerO, = plt.plot(ziwO, riwO, label="innerO")
 l_outerO, = plt.plot(zowO, rowO, label="outerO")
 
-ziwN, riwN, zowN, rowN = readICP("R8O1IS04.icp")
+ziwN, riwN, zowN, rowN = readICP("R8O1IS01.icp")
 
 l_innerN, = plt.plot(ziwN, riwN, label="innerN")
 l_outerN, = plt.plot(zowN, rowN, label="outerN")

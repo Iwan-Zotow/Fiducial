@@ -180,6 +180,7 @@ def make_cup_shell(surfaces):
         rc.insert(0, pt.Z())
 
     # cone
+    Nv = 40
     u = 0.0
     for k in range(0, Nv+1):
         v = utils.clamp(V1c + float(k)*(V2c - V1c)/float(Nv), V1c, V2c)
@@ -201,7 +202,15 @@ def make_cup_shell(surfaces):
 
 def write_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row):
     """
-    write to stdout ICP file
+    """
+    fname = "R" + str(RU) + "O" + str(OuterCup) + "I" + InnerCup + ".icp"
+
+    with open(fname, 'w') as os:
+        save_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row, os)
+
+def save_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row, os = sys.stdout):
+    """
+    write the ICP file to output stream os
     """
     if RU is None:
         return
@@ -219,45 +228,45 @@ def write_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row):
         return
 
     # RU
-    sys.stdout.write(RU)
-    sys.stdout.write("\n")
+    os.write(RU)
+    os.write("\n")
 
     # Outer cup
-    sys.stdout.write(OuterCup)
-    sys.stdout.write("\n")
+    os.write(OuterCup)
+    os.write("\n")
 
     # Inner cup
-    sys.stdout.write(InnerCup)
-    sys.stdout.write("\n")
+    os.write(InnerCup)
+    os.write("\n")
 
     # nof points in the inner wall
     niw = len(riw)
     if niw != len(yiw):
         return None
-    sys.stdout.write(str(niw))
-    sys.stdout.write("\n")
+    os.write(str(niw))
+    os.write("\n")
 
     # outer wall
     for r, y in zip(riw, yiw):
-        sys.stdout.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
+        os.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
 
     # nof points in the outer wall
     now = len(row)
     if now != len(yow):
         return None
-    sys.stdout.write(str(now))
-    sys.stdout.write("\n")
+    os.write(str(now))
+    os.write("\n")
 
     # outer wall
     for r, y in zip(row, yow):
-        sys.stdout.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
+        os.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
 
 
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s :: %(levelname)6s :: %(module)20s :: %(lineno)3d :: %(message)s')
 
-    sol = main("cups/XMSGP030A10.02-036 NS04.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP" # "cups/XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
+    sol = main("cups/XMSGP030A10.02-033 NS01.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP" # "cups/XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
 
     # backend = aocutils.display.defaults.backend
     # display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
@@ -308,9 +317,13 @@ if __name__ == "__main__":
             #    CADhelpers.save_gnuplot_surface("conet", i, blocks, True)
 
     # for S5 - 14, 0, 11
-    outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[21])).GetObject())
-    outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[0])).GetObject())
-    outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[18])).GetObject())
+    # for S4 - 21, 0, 18
+    # for S3 - 14, 0, 11
+    # for S2 - 14, 0, 11
+    # for S1 - 14, 13, 11
+    outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[14])).GetObject())
+    outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[13])).GetObject())
+    outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[11])).GetObject())
 
     print(sep)
 
@@ -324,9 +337,13 @@ if __name__ == "__main__":
     print(sep)
 
     # for S5 - 15, 16, 09
-    inner.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[22])).GetObject())
-    inner.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[23])).GetObject())
+    # for S4 - 22, 23, 16
+    # for S3 - 15, 16, 09
+    # for S2 - 15, 16, 09
+    # for S1 - 15, 16, 09
+    inner.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[15])).GetObject())
     inner.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[16])).GetObject())
+    inner.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[9])).GetObject())
 
     for k, i in enumerate(inner):
         t = CADhelpers.get_surface(i)
@@ -337,6 +354,6 @@ if __name__ == "__main__":
 
     print(sep)
 
-    write_ICP("8", "1", "S04", -101.0, yiw, riw, yow, row)
+    write_ICP("8", "1", "S01", -101.0, yiw, riw, yow, row)
 
     sys.exit(0)
