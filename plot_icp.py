@@ -1,7 +1,5 @@
 #%%
-import sys
 import matplotlib.pyplot as plt
-import numpy as np
 
 def readICP(fname):
     """
@@ -25,9 +23,9 @@ def readICP(fname):
         line = f.readline().rstrip('\n')
         niw = int(line)
 
+        # inner wall
         riw = list()
         ziw = list()
-        # inner wall
         for k in range(niw):
             line = f.readline().rstrip('\n')
             s = line.split(' ')
@@ -39,9 +37,9 @@ def readICP(fname):
         line = f.readline().rstrip('\n')
         now = int(line)
 
+        # outer wall
         row = list()
         zow = list()
-        # outer wall
         for k in range(now):
             line = f.readline().rstrip('\n')
             s = line.split(' ')
@@ -53,13 +51,13 @@ def readICP(fname):
 
     return None
 
-ziwO, riwO, zowO, rowO = readICP("D:/Ceres/Resource/PlanEngine/R8/Cup/R8O1IS01.icp")
-#ziwO, riwO, zowO, rowO = readICP("R8O1IS02.icp")
+#ziwO, riwO, zowO, rowO = readICP("D:/Ceres/Resource/PlanEngine/R8/Cup/R8O1IS01.icp")
+ziwO, riwO, zowO, rowO = readICP("R8O1IS05.icp")
 
 l_innerO, = plt.plot(ziwO, riwO, label="innerO")
 l_outerO, = plt.plot(zowO, rowO, label="outerO")
 
-ziwN, riwN, zowN, rowN = readICP("R8O1IS01.icp")
+ziwN, riwN, zowN, rowN = readICP("R8O1IS04.icp")
 
 l_innerN, = plt.plot(ziwN, riwN, label="innerN")
 l_outerN, = plt.plot(zowN, rowN, label="outerN")

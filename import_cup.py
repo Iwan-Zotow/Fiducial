@@ -246,7 +246,7 @@ def save_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row, os = sys.stdout)
     os.write(str(niw))
     os.write("\n")
 
-    # outer wall
+    # inner wall
     for r, y in zip(riw, yiw):
         os.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
 
