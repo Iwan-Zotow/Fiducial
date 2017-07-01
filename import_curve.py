@@ -164,7 +164,7 @@ def compute_bspline_midline(bspline, Nv = 100, Nu = 1024):
                 ymin = pt.Y()
 
         r2.append(point2d(ymin, math.sqrt(rmin)))
-        r3.append(point3d(uwght*x, uwght*y, uwght*z)) # r3.append(point3d(v, uwght*y, uwght*z))
+        r3.append(point3d(uwght*x, uwght*y, uwght*z))
 
     if len(r3) == 0:
         return None
@@ -183,6 +183,30 @@ def convert_fiducial(pts, origin):
         xfc.append(-pt.z)
         yfc.append(pt.x)
         zfc.append( - (pt.y - origin))
+
+    # first point insertion
+    l = math.sqrt(utils.squared(xfc[0] - xfc[1]) + utils.squared(yfc[0] - yfc[1]) + utils.squared(zfc[0] - zfc[1]))
+    wx = (xfc[1] - xfc[0]) / l
+    wy = (yfc[1] - yfc[0]) / l
+    wz = (zfc[1] - zfc[0]) / l
+
+    s = (origin - zfc[0]) / wz
+
+    xfc.insert(0, xfc[0] + wx*s)
+    yfc.insert(0, yfc[0] + wy*s)
+    zfc.insert(0, zfc[0] + wz*s)
+
+    # last point insertion
+    l = math.sqrt(utils.squared(xfc[-1] - xfc[-2]) + utils.squared(yfc[-1] - yfc[-2]) + utils.squared(zfc[-1] - zfc[-2]))
+    wx = (xfc[-1] - xfc[-2]) / l
+    wy = (yfc[-1] - yfc[-2]) / l
+    wz = (zfc[-1] - zfc[-2]) / l
+
+    s = (origin - zfc[-1]) / wz
+
+    xfc.append(xfc[-1] + wx*s)
+    yfc.append(yfc[-1] + wy*s)
+    zfc.append(zfc[-1] + wz*s)
 
     return (xfc, yfc, zfc)
 
@@ -253,18 +277,18 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s :: %(levelname)6s :: %(module)20s :: %(lineno)3d :: %(message)s')
 
     sep = "          -----------------             "
-    sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S fiducial wire.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
+    sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S fiducial wire full.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
 
-    # backend = aocutils.display.defaults.backend
-    # display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
-    # display_all(display, sol)
-    # start_display()
+    backend = aocutils.display.defaults.backend
+    display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
+    display_all(display, sol)
+    start_display()
 
     #print_flags(sol)
 
-    print(sep)
-    CADhelpers.print_all(sol, sep)
-    print(sep)
+    #print(sep)
+    #CADhelpers.print_all(sol, sep)
+    #print(sep)
 
     the_faces = aocutils.topology.Topo(sol, return_iter=False).faces
     for i, face in enumerate(the_faces):
@@ -306,7 +330,6 @@ if __name__ == "__main__":
                 print("  {0} {1} {2} {3} {4} {5}".format(fp0, lp0, r0, fp1, lp1, r1))
 
         elif t == "Geom_BSplineSurface":
-
             ss = CADhelpers.cast_surface(s).GetObject()
             print("  {0} {1} {2} {3}".format(i, type(ss), CADhelpers.get_surface(ss), t))
 
@@ -319,7 +342,7 @@ if __name__ == "__main__":
             print("      {0} {1} {2} {3}".format(U1, U2, V1, V2))
 
             print(sep)
-            pts, outline = compute_bspline_midline(ss, Nv = 128)
+            pts, outline = compute_bspline_midline(ss, Nv = 220)
             if pts is None:
                 raise RuntimeError("Something wrong with ")
 

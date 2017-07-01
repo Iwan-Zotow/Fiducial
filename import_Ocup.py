@@ -151,9 +151,9 @@ def make_cup_shell(surfaces):
     U1c, U2c, V1c, V2c = cone.Bounds()
     U1t, U2t, V1t, V2t = top.Bounds()
 
-    # print("QA {0} {1} {2} {3}".format(U1s, U2s, V1s, V2s))
-    # print("QB {0} {1} {2} {3}".format(U1c, U2c, V1c, V2c))
-    # print("QC {0} {1} {2} {3}".format(U1t, U2t, V1t, V2t))
+    print("QA {0} {1} {2} {3}".format(U1s, U2s, V1s, V2s))
+    print("QB {0} {1} {2} {3}".format(U1c, U2c, V1c, V2c))
+    print("QC {0} {1} {2} {3}".format(U1t, U2t, V1t, V2t))
 
     rc = list()
     yc = list()
@@ -165,6 +165,8 @@ def make_cup_shell(surfaces):
     v = V1c
     cone.D0(u, v, pt)
     ymin = pt.Y()
+
+    print("QQQ {0}".format(ymin))
 
     # sphere first
     Nv = 40
@@ -181,16 +183,18 @@ def make_cup_shell(surfaces):
 
     # cone
     Nv = 40
-    u = 0.0
+    u = math.pi / 2.0
+    # u = 0.0
     for k in range(0, Nv+1):
         v = utils.clamp(V1c + float(k)*(V2c - V1c)/float(Nv), V1c, V2c)
         cone.D0(u, v, pt)
+        print("      {0} {1} {2}".format(pt.X(), pt.Y(), pt.Z()))
         yc.append(pt.Y())
         rc.append(pt.Z())
 
     # top
     Nv = 4
-    u = 0.0
+    u = math.pi / 2.0
     for k in range(0, Nv+1):
         v = utils.clamp(V1t + float(k)*(V2t - V1t)/float(Nv), V1t, V2t)
         top.D0(u, v, pt)
@@ -266,7 +270,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s :: %(levelname)6s :: %(module)20s :: %(lineno)3d :: %(message)s')
 
-    sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S 203.STEP") # sol = main("cups/XMSGP030A10.02-033 NS01.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP" # "cups/XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
+    sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S 203.STEP")
 
     # backend = aocutils.display.defaults.backend
     # display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
@@ -321,7 +325,7 @@ if __name__ == "__main__":
     # for S3 - 14, 0, 11
     # for S2 - 14, 0, 11
     # for S1 - 14, 13, 11
-    outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[124])).GetObject()) # 39
+    outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[39])).GetObject())
     outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[125])).GetObject())
     outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[126])).GetObject())
 
