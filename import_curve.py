@@ -125,13 +125,7 @@ def compute_bspline_midline(bspline, Nv = 100, Nu = 1024):
     if bspline is None:
         return None
 
-    if "Geom_BSplineSurface" not in str(type(bspline)):
-        return None
-
-    if not bspline.IsUClosed():
-        return None
-
-    if not bspline.IsUPeriodic():
+    if "Geom_RectangularTrimmedSurface" not in str(type(bspline)):
         return None
 
     U1, U2, V1, V2 = bspline.Bounds()
@@ -277,18 +271,18 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s :: %(levelname)6s :: %(module)20s :: %(lineno)3d :: %(message)s')
 
     sep = "          -----------------             "
-    sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S fiducial wire full.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
+    sol = main("cups/XMSGP030A10.01-003 breast_cup_outer_S fiducial wire.STEP") # "XMSGP030A10.01-003 breast_cup_outer_S 214.STEP"
 
-    backend = aocutils.display.defaults.backend
-    display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
-    display_all(display, sol)
-    start_display()
+    # backend = aocutils.display.defaults.backend
+    # display, start_display, add_menu, add_function_to_menu = OCC.Display.SimpleGui.init_display(backend)
+    # display_all(display, sol)
+    # start_display()
 
     #print_flags(sol)
 
-    #print(sep)
-    #CADhelpers.print_all(sol, sep)
-    #print(sep)
+    print(sep)
+    CADhelpers.print_all(sol, sep)
+    print(sep)
 
     the_faces = aocutils.topology.Topo(sol, return_iter=False).faces
     for i, face in enumerate(the_faces):
@@ -329,14 +323,14 @@ if __name__ == "__main__":
 
                 print("  {0} {1} {2} {3} {4} {5}".format(fp0, lp0, r0, fp1, lp1, r1))
 
-        elif t == "Geom_BSplineSurface":
+        elif t == "Geom_RectangularTrimmedSurface":
             ss = CADhelpers.cast_surface(s).GetObject()
             print("  {0} {1} {2} {3}".format(i, type(ss), CADhelpers.get_surface(ss), t))
 
             if ss.IsUClosed() and ss.IsUPeriodic() and not ss.IsVClosed() and not ss.IsVPeriodic():
                 print("    {0} {1} {2} {3}".format(ss.IsUClosed(), ss.IsUPeriodic(), ss.IsVClosed(), ss.IsVPeriodic()))
             else:
-                continue
+                pass
 
             U1, U2, V1, V2 = ss.Bounds()
             print("      {0} {1} {2} {3}".format(U1, U2, V1, V2))
@@ -346,18 +340,20 @@ if __name__ == "__main__":
             if pts is None:
                 raise RuntimeError("Something wrong with ")
 
-            xfc, yfc, zfc      = convert_fiducial(pts, origin = -101.0)
-            xow, yow, xiw, yiw = convert_outline(outline, origin = -101.0)
+            distToOC = 101.0
 
-            for x, y, z in map(lambda x, y, z: (x,y,z), xfc, yfc, zfc) :
-                print("        {0}    {1}    {2}".format(x, y, z))
-            print(sep)
-            for y, r in map(lambda x, y: (x,y), xow, yow):
-                print("        {0}    {1}".format(y, r))
-            print(sep)
-            for y, r in map(lambda x, y: (x,y), xiw, yiw):
-                print("        {0}    {1}".format(y, r))
-            print(sep)
+            xfc, yfc, zfc      = convert_fiducial(pts, origin = -distToOC)
+            xow, yow, xiw, yiw = convert_outline(outline, origin = -distToOC)
+
+            # for x, y, z in map(lambda x, y, z: (x,y,z), xfc, yfc, zfc):
+            #     print("        {0}    {1}    {2}".format(x, y, z))
+            # print(sep)
+            # for y, r in map(lambda x, y: (x,y), xow, yow):
+            #     print("        {0}    {1}".format(y, r))
+            # print(sep)
+            # for y, r in map(lambda x, y: (x,y), xiw, yiw):
+            #     print("        {0}    {1}".format(y, r))
+            # print(sep)
 
             iw = [point2d(np.float32(x), np.float32(y)) for x, y in zip(xiw, yiw)]
             iw = point2d.remove_dupes(iw, 0.5)
@@ -368,9 +364,7 @@ if __name__ == "__main__":
             fc = list(zip(xfc, yfc, zfc))
             fc = point3d.cvt2array(rdp(fc, 0.01))
 
-            write_OCP(8, 1, 101, iw, ow, fc)
-
-            break
+            write_OCP(8, 1, distToOC, iw, ow, fc)
 
             # the_wires = aocutils.topology.Topo(face, return_iter=False).wires
 

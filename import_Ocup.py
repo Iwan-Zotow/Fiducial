@@ -121,6 +121,7 @@ def readSTEP(filename: str):
 
     return importer.shapes
 
+
 def main(filename: str):
     """
     process single cup from filename
@@ -137,23 +138,100 @@ def main(filename: str):
 
     return sol
 
-def make_cup_shell(surfaces):
+
+def make_outer_cup_shell(surfaces, thickness = 2.0):
     """
-    Given list of surfaces, computes and returns (y, r) tuple of the cup shell
+    Given list of surfaces, computes and returns (y, r) tuple of the cup outer shell
     """
     sphere = surfaces[0]
     cone   = surfaces[1]
     top    = surfaces[2]
 
-    print("Q {0} {1} {2}".format(type(sphere), type(cone), type(top)))
+    # print("Q {0} {1} {2}".format(type(sphere), type(cone), type(top)))
 
     U1s, U2s, V1s, V2s = sphere.Bounds()
     U1c, U2c, V1c, V2c = cone.Bounds()
     U1t, U2t, V1t, V2t = top.Bounds()
 
-    print("QA {0} {1} {2} {3}".format(U1s, U2s, V1s, V2s))
-    print("QB {0} {1} {2} {3}".format(U1c, U2c, V1c, V2c))
-    print("QC {0} {1} {2} {3}".format(U1t, U2t, V1t, V2t))
+    # print("QA {0} {1} {2} {3}".format(U1s, U2s, V1s, V2s))
+    # print("QB {0} {1} {2} {3}".format(U1c, U2c, V1c, V2c))
+    # print("QC {0} {1} {2} {3}".format(U1t, U2t, V1t, V2t))
+
+    rc = list()
+    yc = list()
+
+    pt = OCC.gp.gp_Pnt()
+
+    # determine where sphere ends
+    u = math.pi / 2.0
+    v = V1c
+    cone.D0(u, v, pt)
+    ymin = pt.Y()
+    zmin = pt.Z()
+
+    u = math.pi / 2.0
+    v = 0.5*(V1c + V2c)
+    cone.D0(u, v, pt)
+    ymean = pt.Y()
+    zmean = pt.Z()
+
+    l = math.sqrt(utils.squared(ymean - ymin) + utils.squared(zmean - zmin))
+    wy = (ymean - ymin) / l
+    wz = (zmean - zmin) / l
+
+    # swap to get normal
+    wy, wz = wz, wy
+
+    ymin = ymin + wy*thickness
+
+    # sphere first
+    Nv = 40
+    u = math.pi / 2.0
+    ve = 0.5*(V1s + V2s)
+    for k in range(0, Nv+1):
+        v = utils.clamp(V1s + float(k)*(ve - V1s)/float(Nv), V1s, V2s)
+        sphere.D0(u, v, pt)
+        if pt.Y() > ymin:
+            continue
+        # insert in reverse order
+        yc.insert(0, pt.Y())
+        rc.insert(0, pt.Z())
+
+    # cone
+    Nv = 40
+    u = math.pi / 2.0
+    for k in range(0, Nv+1):
+        v = utils.clamp(V1c + float(k)*(V2c - V1c)/float(Nv), V1c, V2c)
+        cone.D0(u, v, pt)
+        print("      {0} {1} {2}".format(pt.X(), pt.Y(), pt.Z()))
+
+        yc.append(pt.Y() + wy*thickness)
+        rc.append(pt.Z() + wz*thickness)
+
+    # top
+    Nv = 4
+    u = math.pi / 2.0
+    for k in range(0, Nv+1):
+        v = utils.clamp(V1t + float(k)*(V2t - V1t)/float(Nv), V1t, V2t)
+        top.D0(u, v, pt)
+        yc.append(pt.Y() + wy*thickness)
+        rc.append(pt.Z() + wz*thickness)
+
+    # print("rrr {0} {1} {2}".format((U1s, U2s, V1s, V2s), (U1c, U2c, V1c, V2c), (U1t, U2t, V1t, V2t)) )
+    return (yc, rc)
+
+
+def make_inner_cup_shell(surfaces):
+    """
+    Given list of surfaces, computes and returns (y, r) tuple of the cup inner shell
+    """
+    sphere = surfaces[0]
+    cone   = surfaces[1]
+    top    = surfaces[2]
+
+    U1s, U2s, V1s, V2s = sphere.Bounds()
+    U1c, U2c, V1c, V2c = cone.Bounds()
+    U1t, U2t, V1t, V2t = top.Bounds()
 
     rc = list()
     yc = list()
@@ -165,8 +243,6 @@ def make_cup_shell(surfaces):
     v = V1c
     cone.D0(u, v, pt)
     ymin = pt.Y()
-
-    print("QQQ {0}".format(ymin))
 
     # sphere first
     Nv = 40
@@ -201,69 +277,7 @@ def make_cup_shell(surfaces):
         yc.append(pt.Y())
         rc.append(pt.Z())
 
-    # print("rrr {0} {1} {2}".format((U1s, U2s, V1s, V2s), (U1c, U2c, V1c, V2c), (U1t, U2t, V1t, V2t)) )
     return (yc, rc)
-
-def write_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row):
-    """
-    """
-    fname = "R" + str(RU) + "O" + str(OuterCup) + "I" + InnerCup + ".icp"
-
-    with open(fname, 'w') as os:
-        save_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row, os)
-
-def save_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row, os = sys.stdout):
-    """
-    write the ICP file to output stream os
-    """
-    if RU is None:
-        return
-
-    if yiw is None:
-        return
-
-    if riw is None:
-        return
-
-    if yow is None:
-        return
-
-    if row is None:
-        return
-
-    # RU
-    os.write(RU)
-    os.write("\n")
-
-    # Outer cup
-    os.write(OuterCup)
-    os.write("\n")
-
-    # Inner cup
-    os.write(InnerCup)
-    os.write("\n")
-
-    # nof points in the inner wall
-    niw = len(riw)
-    if niw != len(yiw):
-        return None
-    os.write(str(niw))
-    os.write("\n")
-
-    # inner wall
-    for r, y in zip(riw, yiw):
-        os.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
-
-    # nof points in the outer wall
-    now = len(row)
-    if now != len(yow):
-        return None
-    os.write(str(now))
-    os.write("\n")
-
-    # outer wall
-    for r, y in zip(row, yow):
-        os.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
 
 
 if __name__ == "__main__":
@@ -280,9 +294,9 @@ if __name__ == "__main__":
     #CADhelpers.print_flags(sol)
 
     sep: str = "          -------------               "
-    #print(sep)
-    #CADhelpers.print_all(sol, sep)
-    #print(sep)
+    # print(sep)
+    # CADhelpers.print_all(sol, sep)
+    # print(sep)
 
     the_faces = aocutils.topology.Topo(sol, return_iter=False).faces
 
@@ -316,15 +330,7 @@ if __name__ == "__main__":
             ss = CADhelpers.cast_surface(s).GetObject() # specific surface
             blocks = CADhelpers.surface2gnuplot(ss)
             CADhelpers.save_gnuplot_surface("trim", i, blocks, True)
-            # bs = CADhelpers.cast_surface(ss.BasisSurface()).GetObject()
-            #if "Geom_ConicalSurface" in str(type(bs)):
-            #    CADhelpers.save_gnuplot_surface("conet", i, blocks, True)
 
-    # for S5 - 14, 0, 11
-    # for S4 - 21, 0, 18
-    # for S3 - 14, 0, 11
-    # for S2 - 14, 0, 11
-    # for S1 - 14, 13, 11
     outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[39])).GetObject())
     outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[125])).GetObject())
     outer.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[126])).GetObject())
@@ -336,15 +342,10 @@ if __name__ == "__main__":
         print("{0} {1} {2}".format(k, type(o), t))
     print(sep)
 
-    yow, row  = make_cup_shell(outer)
+    yow, row  = make_outer_cup_shell(outer)
 
     print(sep)
 
-    # for S5 - 15, 16, 09
-    # for S4 - 22, 23, 16
-    # for S3 - 15, 16, 09
-    # for S2 - 15, 16, 09
-    # for S1 - 15, 16, 09
     inner.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[124])).GetObject())
     inner.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[125])).GetObject())
     inner.append(CADhelpers.cast_surface(OCC.BRep.BRep_Tool.Surface(the_faces[126])).GetObject())
@@ -354,10 +355,18 @@ if __name__ == "__main__":
         print("{0} {1} {2}".format(k, type(i), t))
     print(sep)
 
-    yiw, riw = make_cup_shell(inner)
+    yiw, riw = make_inner_cup_shell(inner)
+
+    # outer cup fixup from drawings
+    lp = yow[-1]
+    yow.append(lp)
+    row.append(8.700000e+01)
+    yow.append(0.0)
+    row.append(8.795000e+01)
 
     print(sep)
 
-    write_ICP("8", "1", "G01", -101.0, yiw, riw, yow, row)
+    DistanceToCup = -101.0
+    CADhelpers.write_ICP("8", "1", "G01", DistanceToCup, yiw, riw, yow, row)
 
     sys.exit(0)

@@ -52,7 +52,8 @@ def readICP(fname):
     return None
 
 #ziwO, riwO, zowO, rowO = readICP("D:/Ceres/Resource/PlanEngine/R8/Cup/R8O1IS01.icp")
-ziwO, riwO, zowO, rowO = readICP("D:/Ceres/Resource/PlanEngine/R8/Cup/R8O1.ocp")
+#ziwO, riwO, zowO, rowO = readICP("R8O1.ocp")
+ziwO, riwO, zowO, rowO = readICP("R8O1.ocp")
 
 l_innerO, = plt.plot(ziwO, riwO, label="innerO")
 l_outerO, = plt.plot(zowO, rowO, label="outerO")

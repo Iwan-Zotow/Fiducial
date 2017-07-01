@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 
 from typing import List
 
@@ -261,6 +262,7 @@ def surface2gnuplot(surface, Nu:int = 40, Nv:int = 40) -> List[List[point3d]]:
 
     return blocks
 
+
 def save_gnuplot_surface(prefix: str, i:int, blocks, full: bool = False):
     """
     Save sphere block in the gnuplot format,
@@ -280,6 +282,70 @@ def save_gnuplot_surface(prefix: str, i:int, blocks, full: bool = False):
                     s = "  {0}    {1}    {2}\n".format(pt3.x, pt3.y, pt3.z)
                 f.write(s)
             f.write("\n")
+
+
+def write_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row):
+    """
+    write the ICP compatible data to file
+    """
+    fname = "R" + str(RU) + "O" + str(OuterCup) + "I" + InnerCup + ".icp"
+
+    with open(fname, 'w') as os:
+        save_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row, os)
+
+
+def save_ICP(RU, OuterCup, InnerCup, shift, yiw, riw, yow, row, os = sys.stdout):
+    """
+    write the ICP compatible data to output stream os
+    """
+    if RU is None:
+        return
+
+    if yiw is None:
+        return
+
+    if riw is None:
+        return
+
+    if yow is None:
+        return
+
+    if row is None:
+        return
+
+    # RU
+    os.write(RU)
+    os.write("\n")
+
+    # Outer cup
+    os.write(OuterCup)
+    os.write("\n")
+
+    # Inner cup
+    os.write(InnerCup)
+    os.write("\n")
+
+    # nof points in the inner wall
+    niw = len(riw)
+    if niw != len(yiw):
+        return None
+    os.write(str(niw))
+    os.write("\n")
+
+    # inner wall
+    for r, y in zip(riw, yiw):
+        os.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
+
+    # nof points in the outer wall
+    now = len(row)
+    if now != len(yow):
+        return None
+    os.write(str(now))
+    os.write("\n")
+
+    # outer wall
+    for r, y in zip(row, yow):
+        os.write("{0:13.6e} {1:13.6e}\n".format(shift - y, r))
 
 
 def print_flags(shape):
