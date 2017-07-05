@@ -185,6 +185,11 @@ def make_outer_cup_shell(surfaces, thickness = 2.0):
     # protrude intersection point out
     ymin = ymin + wy*thickness
 
+    EPS = 1.0e-3
+
+    yprev = -100000.0
+    zprev = -100000.0
+
     # sphere first
     Nv = 40
     u = math.pi / 2.0
@@ -194,9 +199,16 @@ def make_outer_cup_shell(surfaces, thickness = 2.0):
         sphere.D0(u, v, pt)
         if pt.Y() > ymin:
             continue
-        # insert in reverse order
-        yc.insert(0, pt.Y())
-        rc.insert(0, pt.Z())
+        y = pt.Y()
+        z = pt.Z()
+        # check if it is the same point
+        dist = math.sqrt(utils.squared(y - yprev) + utils.squared(z - zprev))
+        if dist > EPS:
+            # insert in reverse order
+            yc.insert(0, y)
+            rc.insert(0, z)
+        yprev = y
+        zprev = z
 
     # cone
     Nv = 40
@@ -204,10 +216,15 @@ def make_outer_cup_shell(surfaces, thickness = 2.0):
     for k in range(0, Nv+1):
         v = utils.clamp(V1c + float(k)*(V2c - V1c)/float(Nv), V1c, V2c)
         cone.D0(u, v, pt)
-        print("      {0} {1} {2}".format(pt.X(), pt.Y(), pt.Z()))
-
-        yc.append(pt.Y() + wy*thickness)
-        rc.append(pt.Z() + wz*thickness)
+        y = pt.Y() + wy*thickness
+        z = pt.Z() + wz*thickness
+        # check if it is the same point
+        dist = math.sqrt(utils.squared(y - yprev) + utils.squared(z - zprev))
+        if dist > EPS:
+            yc.append(y)
+            rc.append(z)
+        yprev = y
+        zprev = z
 
     # top
     Nv = 4
@@ -215,8 +232,15 @@ def make_outer_cup_shell(surfaces, thickness = 2.0):
     for k in range(0, Nv+1):
         v = utils.clamp(V1t + float(k)*(V2t - V1t)/float(Nv), V1t, V2t)
         top.D0(u, v, pt)
-        yc.append(pt.Y() + wy*thickness)
-        rc.append(pt.Z() + wz*thickness)
+        y = pt.Y() + wy*thickness
+        z = pt.Z() + wz*thickness
+        # check if it is the same point
+        dist = math.sqrt(utils.squared(y - yprev) + utils.squared(z - zprev))
+        if dist > EPS:
+            yc.append(y)
+            rc.append(z)
+        yprev = y
+        zprev = z
 
     # print("rrr {0} {1} {2}".format((U1s, U2s, V1s, V2s), (U1c, U2c, V1c, V2c), (U1t, U2t, V1t, V2t)) )
     return (yc, rc)
@@ -245,6 +269,11 @@ def make_inner_cup_shell(surfaces):
     cone.D0(u, v, pt)
     ymin = pt.Y()
 
+    EPS = 1.0e-3
+
+    yprev = -100000.0
+    zprev = -100000.0
+
     # sphere first
     Nv = 40
     u = math.pi / 2.0
@@ -254,9 +283,16 @@ def make_inner_cup_shell(surfaces):
         sphere.D0(u, v, pt)
         if pt.Y() > ymin:
             continue
-        # insert in reverse order
-        yc.insert(0, pt.Y())
-        rc.insert(0, pt.Z())
+        y = pt.Y()
+        z = pt.Z()
+        # check if it is the same point
+        dist = math.sqrt(utils.squared(y - yprev) + utils.squared(z - zprev))
+        if dist > EPS:
+            # insert in reverse order
+            yc.insert(0, y)
+            rc.insert(0, z)
+        yprev = y
+        zprev = z
 
     # cone
     Nv = 40
@@ -265,9 +301,15 @@ def make_inner_cup_shell(surfaces):
     for k in range(0, Nv+1):
         v = utils.clamp(V1c + float(k)*(V2c - V1c)/float(Nv), V1c, V2c)
         cone.D0(u, v, pt)
-        print("      {0} {1} {2}".format(pt.X(), pt.Y(), pt.Z()))
-        yc.append(pt.Y())
-        rc.append(pt.Z())
+        y = pt.Y()
+        z = pt.Z()
+        # check if it is the same point
+        dist = math.sqrt(utils.squared(y - yprev) + utils.squared(z - zprev))
+        if dist > EPS:
+            yc.append(y)
+            rc.append(z)
+        yprev = y
+        zprev = z
 
     # top
     Nv = 4
@@ -275,8 +317,15 @@ def make_inner_cup_shell(surfaces):
     for k in range(0, Nv+1):
         v = utils.clamp(V1t + float(k)*(V2t - V1t)/float(Nv), V1t, V2t)
         top.D0(u, v, pt)
-        yc.append(pt.Y())
-        rc.append(pt.Z())
+        y = pt.Y()
+        z = pt.Z()
+        # check if it is the same point
+        dist = math.sqrt(utils.squared(y - yprev) + utils.squared(z - zprev))
+        if dist > EPS:
+            yc.append(y)
+            rc.append(z)
+        yprev = y
+        zprev = z
 
     return (yc, rc)
 
