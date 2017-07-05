@@ -182,6 +182,7 @@ def make_outer_cup_shell(surfaces, thickness = 2.0):
     # swap to get normal
     wy, wz = wz, wy
 
+    # protrude intersection point out
     ymin = ymin + wy*thickness
 
     # sphere first
@@ -360,9 +361,9 @@ if __name__ == "__main__":
     # outer cup fixup from drawings
     lp = yow[-1]
     yow.append(lp)
-    row.append(8.700000e+01)
+    row.append(8.700000e+01) # those number were taken from SW drawing
     yow.append(0.0)
-    row.append(8.795000e+01)
+    row.append(8.795000e+01) # total diameter 179.50
 
     print(sep)
 
