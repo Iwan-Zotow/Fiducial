@@ -320,7 +320,7 @@ if __name__ == "__main__":
     print(sep)
 
     DistanceToTop = -101.0
-    FlapperShift  = -4.22
+    FlapperShift  = -4.22 # magic variable/shift as per NY
     CADhelpers.write_ICP("8", "1", "S01", DistanceToTop + FlapperShift, yiw, riw, yow, row)
 
     sys.exit(0)
